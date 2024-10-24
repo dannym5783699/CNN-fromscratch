@@ -17,11 +17,10 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         hidden_size = 2
         output_size = 1
         # Initialize the network with 3 input neurons, 2 hidden neurons, and 1 output neuron
-        layer1 = Layer(input_size,hidden_size)
-        layer1.setActivation(relu)
-        layer2 = Layer(hidden_size,output_size)
-        layer2.setActivation(relu)
-        nn = FeedforwardNeuralNetwork(layer1, layer2)
+        nn = FeedforwardNeuralNetwork(
+            Layer(input_size,hidden_size).setActivation(relu), 
+            Layer(hidden_size,output_size).setActivation(relu)
+            )
 
         # Input data
         inputs = np.array([0.5, 0.1, -0.3])
@@ -52,11 +51,10 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         hidden_size = 2
         output_size = 1
         # Initialize the network with 3 input neurons, 2 hidden neurons, and 1 output neuron
-        layer1 = Layer(input_size,hidden_size)
-        layer2 = Layer(hidden_size,output_size)
-        layer1.setActivation(sigmoid)
-        layer2.setActivation(sigmoid)
-        nn = FeedforwardNeuralNetwork(layer1, layer2)
+        nn = FeedforwardNeuralNetwork(
+                Layer(input_size,hidden_size).setActivation(sigmoid), 
+                Layer(hidden_size,output_size).setActivation(sigmoid)
+                )
 
         # Input data
         inputs = np.array([0.5, 0.1, -0.3])

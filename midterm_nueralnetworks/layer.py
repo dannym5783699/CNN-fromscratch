@@ -21,7 +21,7 @@ class Layer:
         self.weights = np.random.randn(output_size, input_size + 1)
         #default activation function is identity function.
         self.activation = lambda x:x
-        
+
         #set up matrix to hold partial derivatives. 
 
     def forward(self, inputs):
@@ -52,3 +52,4 @@ class Layer:
     
     def setActivation(self, activation):
         self.activation = activation
+        return self

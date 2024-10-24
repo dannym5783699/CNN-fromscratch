@@ -1,6 +1,10 @@
 import unittest
 import numpy as np
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join('..')))
 from midterm_nueralnetworks.layer import Layer
+
 
 class TestLayer(unittest.TestCase):
 
@@ -13,7 +17,9 @@ class TestLayer(unittest.TestCase):
         layer = Layer(input_size, output_size)
         
         inputs = np.array([0.5, 0.1, -0.3])
+        print(layer.weights)
         output = layer.forward(inputs)
+        print(output)
         
         # Check if the output shape is correct (should match output_size)
         self.assertEqual(output.shape, (output_size,))

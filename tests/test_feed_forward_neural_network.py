@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join('..')))
 import unittest
 import numpy as np
 from midterm_nueralnetworks.feed_forward_neural_network import FeedforwardNeuralNetwork, relu, sigmoid
@@ -14,21 +17,29 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         hidden_size = 2
         output_size = 1
         # Initialize the network with 3 input neurons, 2 hidden neurons, and 1 output neuron
-        nn = FeedforwardNeuralNetwork([input_size, hidden_size, output_size])
+        layer1 = Layer(input_size,hidden_size)
+        layer1.setActivation(relu)
+        layer2 = Layer(hidden_size,output_size)
+        layer2.setActivation(relu)
+        nn = FeedforwardNeuralNetwork(layer1, layer2)
+
+        # Input data
+        inputs = np.array([0.5, 0.1, -0.3])
+        #add 1 for manual calculation of bias
+        expected_output = np.array([0.5, 0.1, -0.3])
+    
+
 
         # Set a known weight matrix in the Layer for predictable behavior
         for layer in nn.layers:
             layer.weights = np.ones((layer.weights.shape))
+            # Manually calculate the expected output for the given input and weights, weights and bias are 1.
+            expected_output = relu(np.dot(np.ones(layer.weights.shape), np.append(expected_output, 1)))
 
-        # Input data
-        inputs = np.array([0.5, 0.1, -0.3])
+
 
         # Forward pass using ReLU activation
-        output = nn.forward(inputs, relu)
-
-        # Manually calculate the expected output for the given input and weights
-        expected_output = relu(np.dot(np.ones((output_size, hidden_size + 1)),
-                                      relu(np.dot(np.ones((hidden_size, input_size + 1)), np.append(inputs, 1)))))
+        output = nn.forward(inputs)
 
         # Compare the output from the forward pass with the expected output
         np.testing.assert_array_almost_equal(output, expected_output, decimal=6)
@@ -41,21 +52,25 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         hidden_size = 2
         output_size = 1
         # Initialize the network with 3 input neurons, 2 hidden neurons, and 1 output neuron
-        nn = FeedforwardNeuralNetwork([input_size, hidden_size, output_size])
+        layer1 = Layer(input_size,hidden_size)
+        layer2 = Layer(hidden_size,output_size)
+        layer1.setActivation(sigmoid)
+        layer2.setActivation(sigmoid)
+        nn = FeedforwardNeuralNetwork(layer1, layer2)
+
+        # Input data
+        inputs = np.array([0.5, 0.1, -0.3])
+        expected_output = np.array([0.5, 0.1, -0.3])
 
         # Set a known weight matrix in the Layer for predictable behavior
         for layer in nn.layers:
             layer.weights = np.ones((layer.weights.shape))
+            expected_output = sigmoid(np.dot(np.ones(layer.weights.shape), np.append(expected_output, 1)))
 
-        # Input data
-        inputs = np.array([0.5, 0.1, -0.3])
 
         # Forward pass using Sigmoid activation
-        output = nn.forward(inputs, sigmoid)
+        output = nn.forward(inputs)
 
-        # Manually calculate the expected output for the given input and weights
-        expected_output = sigmoid(np.dot(np.ones((output_size, hidden_size + 1)),
-                                         sigmoid(np.dot(np.ones((hidden_size, input_size + 1)), np.append(inputs, 1)))))
 
         # Compare the output from the forward pass with the expected output
         np.testing.assert_array_almost_equal(output, expected_output, decimal=6)

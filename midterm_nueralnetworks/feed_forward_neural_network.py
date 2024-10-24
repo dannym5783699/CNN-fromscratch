@@ -12,7 +12,7 @@ def sigmoid(x):
 
 
 class FeedforwardNeuralNetwork:
-    def __init__(self, layer_sizes):
+    def __init__(self, *layers):
         """
         Initializes the Feedforward Neural Network with the given layer sizes.
 
@@ -22,11 +22,9 @@ class FeedforwardNeuralNetwork:
             A list containing the sizes of each layer in the network,
             where each element represents the number of neurons in that layer.
         """
-        self.layers = []
-        for i in range(len(layer_sizes) - 1):
-            self.layers.append(Layer(layer_sizes[i], layer_sizes[i + 1]))
+        self.layers = list(layers)
 
-    def forward(self, inputs, activation_function):
+    def forward(self, inputs):
         """
         Perform a forward pass through the network, applying the given activation function.
 
@@ -43,6 +41,6 @@ class FeedforwardNeuralNetwork:
             The final output after passing through all layers and applying the activation function.
         """
         for layer in self.layers:
-            inputs = activation_function(layer.forward(inputs))
+            inputs = layer.forward(inputs) 
         return inputs
 

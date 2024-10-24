@@ -19,6 +19,10 @@ class Layer:
         """
 
         self.weights = np.random.randn(output_size, input_size + 1)
+        #default activation function is identity function.
+        self.activation = lambda x:x
+        
+        #set up matrix to hold partial derivatives. 
 
     def forward(self, inputs):
         """
@@ -44,4 +48,7 @@ class Layer:
         inputs_with_bias = np.append(inputs, 1)
 
         self.z = np.dot(self.weights, inputs_with_bias)
-        return self.z
+        return self.activation(self.z)
+    
+    def setActivation(self, activation):
+        self.activation = activation

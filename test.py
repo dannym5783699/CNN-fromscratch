@@ -25,15 +25,15 @@ if __name__ == "__main__":
     X_test = scaler.transform(X_test)
 
     # Initialize the neural network with appropriate layer sizes
-    nn = FeedforwardNeuralNetwork([4, 5, 3])  # 4 input, 5 hidden, 3 output nodes
+    nn = FeedforwardNeuralNetwork([4, 3])  # 4 input, 5 hidden, 3 output nodes
 
     # Train the network
     nn.train(
         X_train, y_train,
-        epochs=1000,
+        epochs=100,
         learning_rate=0.1,
-        activation_function=sigmoid,
-        activation_derivative=sigmoid_derivative
+        activation_function= sigmoid,
+        activation_derivative= sigmoid_derivative
     )
 
     # Test the trained network

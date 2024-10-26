@@ -1,23 +1,52 @@
 import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from feed_forward_neural_network import (
     FeedforwardNeuralNetwork, sigmoid, sigmoid_derivative
 )
 
 if __name__ == "__main__":
-    x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    y = np.array([[0], [1], [1], [0]])
+    # Load and preprocess the Iris dataset
+    iris = load_iris()
+    X = iris.data  # Input features (4 features)
+    y = iris.target.reshape(-1, 1)  # Target labels (3 classes)
 
-    nn = FeedforwardNeuralNetwork([2, 2, 1])
+    # One-hot encode the target labels
+    encoder = OneHotEncoder(sparse_output=False)
+    y = encoder.fit_transform(y)
 
+    # Split the data into training and testing sets (80% train, 20% test)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Normalize the data to improve network performance
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    # Initialize the neural network with appropriate layer sizes
+    nn = FeedforwardNeuralNetwork([4, 5, 3])  # 4 input, 5 hidden, 3 output nodes
+
+    # Train the network
     nn.train(
-        x, y,
-        epochs=10000,
+        X_train, y_train,
+        epochs=1000,
         learning_rate=0.1,
         activation_function=sigmoid,
         activation_derivative=sigmoid_derivative
     )
 
+    # Test the trained network
     print("\nTesting Trained Network:")
-    for xi in x:
-        output = nn.forward(xi, sigmoid)
-        print(f"Input: {xi} -> Output: {output}")
+    correct = 0
+    for x, target in zip(X_test, y_test):
+        output = nn.forward(x, sigmoid)
+        predicted = np.argmax(output)  # Predicted class (index of max output)
+        actual = np.argmax(target)  # Actual class (index of 1 in one-hot)
+        print(f"Input: {x} -> Predicted: {predicted}, Actual: {actual}")
+        if predicted == actual:
+            correct += 1
+
+    # Calculate and print the accuracy
+    accuracy = correct / len(X_test) * 100
+    print(f"\nAccuracy: {accuracy:.2f}%")

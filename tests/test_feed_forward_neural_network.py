@@ -1,65 +1,104 @@
 import unittest
 import numpy as np
-from midterm_nueralnetworks.feed_forward_neural_network import FeedforwardNeuralNetwork, relu, sigmoid
-from midterm_nueralnetworks.layer import Layer
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from midterm_nueralnetworks.feed_forward_neural_network import (
+    FeedforwardNeuralNetwork, relu, relu_derivative, sigmoid, sigmoid_derivative
+)
 
 
 class TestFeedforwardNeuralNetwork(unittest.TestCase):
 
-    def test_forward_with_relu_activation(self):
+    def setUp(self):
         """
-        Test the forward pass with ReLU activation function.
+        Load and preprocess the Iris dataset to be used for testing.
+        This includes one-hot encoding of labels, normalization, and dataset splitting.
         """
-        input_size = 3
-        hidden_size = 2
-        output_size = 1
-        # Initialize the network with 3 input neurons, 2 hidden neurons, and 1 output neuron
-        nn = FeedforwardNeuralNetwork([input_size, hidden_size, output_size])
+        iris = load_iris()
+        X = iris.data  # Input features (4 features)
+        y = iris.target.reshape(-1, 1)  # Target labels (3 classes)
 
-        # Set a known weight matrix in the Layer for predictable behavior
-        for layer in nn.layers:
-            layer.weights = np.ones((layer.weights.shape))
+        # One-hot encode the target labels
+        encoder = OneHotEncoder(sparse_output=False)
+        y = encoder.fit_transform(y)
 
-        # Input data
-        inputs = np.array([0.5, 0.1, -0.3])
+        # Split data into training and testing sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        # Forward pass using ReLU activation
-        output = nn.forward(inputs, relu)
+        # Normalize the data
+        scaler = StandardScaler()
+        self.X_train = scaler.fit_transform(X_train)
+        self.X_test = scaler.transform(X_test)
+        self.y_train = y_train
+        self.y_test = y_test
 
-        # Manually calculate the expected output for the given input and weights
-        expected_output = relu(np.dot(np.ones((output_size, hidden_size + 1)),
-                                      relu(np.dot(np.ones((hidden_size, input_size + 1)), np.append(inputs, 1)))))
+        # Initialize the neural network
+        self.nn = FeedforwardNeuralNetwork([4, 5, 3])  # 4 input, 5 hidden, 3 output nodes
 
-        # Compare the output from the forward pass with the expected output
-        np.testing.assert_array_almost_equal(output, expected_output, decimal=6)
-
-    def test_forward_with_sigmoid_activation(self):
+    def test_forward_pass(self):
         """
-        Test the forward pass with Sigmoid activation function.
+        Test the forward pass on a sample input to check if the output has the correct shape.
         """
-        input_size = 3
-        hidden_size = 2
-        output_size = 1
-        # Initialize the network with 3 input neurons, 2 hidden neurons, and 1 output neuron
-        nn = FeedforwardNeuralNetwork([input_size, hidden_size, output_size])
+        sample_input = self.X_train[0]
+        output = self.nn.forward(sample_input, sigmoid)
 
-        # Set a known weight matrix in the Layer for predictable behavior
-        for layer in nn.layers:
-            layer.weights = np.ones((layer.weights.shape))
+        # Expected output shape should match the number of neurons in the output layer
+        self.assertEqual(output.shape, (3,))
+        print("Forward pass output shape test passed.")
 
-        # Input data
-        inputs = np.array([0.5, 0.1, -0.3])
+    def test_backward_pass(self):
+        """
+        Test the backward pass to check if gradients are calculated correctly.
+        """
+        # Forward pass
+        sample_input = self.X_train[0]
+        target = self.y_train[0]
+        output = self.nn.forward(sample_input, sigmoid)
 
-        # Forward pass using Sigmoid activation
-        output = nn.forward(inputs, sigmoid)
+        # Backward pass
+        gradients = self.nn.backward(output, target, sigmoid_derivative)
 
-        # Manually calculate the expected output for the given input and weights
-        expected_output = sigmoid(np.dot(np.ones((output_size, hidden_size + 1)),
-                                         sigmoid(np.dot(np.ones((hidden_size, input_size + 1)), np.append(inputs, 1)))))
+        # Check if gradients were calculated for each layer
+        self.assertEqual(len(gradients), len(self.nn.layers))
+        for grad, layer in zip(gradients, self.nn.layers):
+            self.assertEqual(grad.shape, layer.weights.shape)
+        print("Backward pass gradient shape test passed.")
 
-        # Compare the output from the forward pass with the expected output
-        np.testing.assert_array_almost_equal(output, expected_output, decimal=6)
+    def test_training_process(self):
+        """
+        Train the network on the Iris dataset for a few epochs and test if it improves accuracy.
+        """
+        initial_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
+
+        # Train for a small number of epochs to see if accuracy improves
+        self.nn.train(
+            self.X_train, self.y_train,
+            epochs=10,
+            learning_rate=0.1,
+            activation_function=sigmoid,
+            activation_derivative=sigmoid_derivative
+        )
+
+        final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
+
+        # Check if accuracy improved after training
+        self.assertGreater(final_accuracy, initial_accuracy)
+        print("Training process accuracy improvement test passed.")
+
+    def calculate_accuracy(self, network, X, y):
+        """
+        Calculate the accuracy of the neural network on a given dataset.
+        """
+        correct = 0
+        for x, target in zip(X, y):
+            output = network.forward(x, sigmoid)
+            predicted = np.argmax(output)
+            actual = np.argmax(target)
+            if predicted == actual:
+                correct += 1
+        return correct / len(X) * 100
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

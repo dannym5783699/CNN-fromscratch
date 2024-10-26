@@ -2,6 +2,7 @@ import numpy as np
 from midterm_nueralnetworks.neural_network.layer import Layer
 
 
+# TODO: We should pult all these pure functions in an 'activation.py' & 'loss.py' files or combine them into a 'utils.py' file
 def relu(x):
     return np.maximum(0, x)
 
@@ -48,10 +49,16 @@ class FeedforwardNeuralNetwork:
         """
         Initializes the Feedforward Neural Network with the given layer sizes.
         """
+        # TODO: We should define the layers outside of the class and pass them as an argument instead of passing the layer sizes
         self.layers = [Layer(layer_sizes[i], layer_sizes[i + 1])
                        for i in range(len(layer_sizes) - 1)]
-        self.inputs = []  # To store inputs for backpropagation
+        # TODO: This is being redefined as in forward so it should be set to None here. 
+        self.inputs = None  # To store inputs for backpropagation
+        # TODO: rename 'inputs' to 'activations' to be more clear
+        # TODO: Optional: should store the activations as part of the layer object, not as part of the network object. It would be more clear and easier to manage.
 
+    # TODO: Forward shouldn't take an activation function as an argument. It should be defined in the layer object or as a property of the network object.
+    # TODO: should similarly rename the argument 'inputs' to 'X', its a bit confusing to have the same name as the attribute.
     def forward(self, inputs, activation_function):
         """
         Perform a forward pass through the network, applying the given activation function.
@@ -63,6 +70,7 @@ class FeedforwardNeuralNetwork:
             inputs = activation_function(inputs)
         return inputs
 
+    # TODO: Would be cleaner if loss_derivative/activation_derivation were strings that could be looked up in a dictionary of functions e.g. "mse" -> mse_derivative
     def backward(self, output, target, activation_derivative, loss_derivative):
         """
         Perform backpropagation to calculate gradients for weights in all layers.
@@ -83,7 +91,11 @@ class FeedforwardNeuralNetwork:
 
         gradients = []  # Store gradients for each layer
 
+        # TODO: If we store the activations as part of the layer object, this loop can be simplified
         # Backpropagate through the layers in reverse
+        # TODO: We should use enumerate instead of range(len(...)) to avoid indexing into the list
+        # TODO: something like this: for i, layer in reversed(list(enumerate(self.layers))):
+        # TODO: and if the activations are stored in the layer object, we can just iterate over the layers directly like this: for layer in reversed(self.layers):
         for i in reversed(range(len(self.layers))):
             layer = self.layers[i]
 
@@ -99,6 +111,7 @@ class FeedforwardNeuralNetwork:
                 delta = np.dot(layer.weights[:, :-1].T, delta) * activation_derivative(self.inputs[i])
 
         # Reverse to match forward order if necessary
+        # TODO: Instead of reversing the list, we can just prepend the gradients to the list in the loop above
         gradients.reverse()
         return gradients
 

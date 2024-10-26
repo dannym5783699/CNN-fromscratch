@@ -52,7 +52,6 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             inputs = layer.forward(inputs)
             self.inputs.append(inputs)  # Store inputs for each layer
-            print(inputs)
             inputs = activation_function(inputs)
         return inputs
 
@@ -95,13 +94,19 @@ class FeedforwardNeuralNetwork:
         gradients.reverse()
         return gradients
 
-    def update_weights(self, gradients, learning_rate):
+    def gd(self, gradients, learning_rate):
         """
-        Update the weights of all layers using the gradients and learning rate.
+        Performs gradient descent to update weights based on the computed gradients.
+
+        Parameters:
+        ----------
+        gradients : list of numpy.ndarray
+            A list containing the gradients for each layer, computed from backpropagation.
+        learning_rate : float
+            The learning rate to control the size of the weight updates.
         """
         for layer, grad_weights in zip(self.layers, gradients):
-            print(f"Updating weights for layer with gradient: {grad_weights}")
-            layer.weights -= learning_rate * grad_weights  # Update weights
+            layer.weights -= learning_rate * grad_weights
 
     def train(self, x, y, epochs, learning_rate, activation_function, activation_derivative, loss_derivative):
         """
@@ -111,4 +116,4 @@ class FeedforwardNeuralNetwork:
             for xi, yi in zip(x, y):
                 output = self.forward(xi, activation_function)  # Forward pass
                 gradients = self.backward(output, yi, activation_derivative, loss_derivative)  # Backpropagation
-                self.update_weights(gradients, learning_rate)  # Update weights
+                self.gd(gradients, learning_rate)  # Update weights using gradient descent

@@ -4,12 +4,9 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from midterm_nueralnetworks.feed_forward_neural_network import (
-    FeedforwardNeuralNetwork, relu, relu_derivative, sigmoid, sigmoid_derivative
+    FeedforwardNeuralNetwork, relu, relu_derivative, sigmoid, sigmoid_derivative, mse_derivative
 )
 
-# Define the Mean Squared Error (MSE) derivative for testing
-def mse_derivative(output, target):
-    return output - target
 
 class TestFeedforwardNeuralNetwork(unittest.TestCase):
 
@@ -45,36 +42,41 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         """
         sample_input = self.X_train[0]
         output = self.nn.forward(sample_input, sigmoid)
-
-        # Expected output shape should match the number of neurons in the output layer
         self.assertEqual(output.shape, (3,))
-        print("Forward pass output shape test passed.")
 
     def test_backward_pass(self):
         """
         Test the backward pass to check if gradients are calculated correctly.
         """
-        # Forward pass
         sample_input = self.X_train[0]
         target = self.y_train[0]
         output = self.nn.forward(sample_input, sigmoid)
-
-        # Backward pass with the MSE derivative as the loss function
         gradients = self.nn.backward(output, target, sigmoid_derivative, mse_derivative)
-
-        # Check if gradients were calculated for each layer
         self.assertEqual(len(gradients), len(self.nn.layers))
         for grad, layer in zip(gradients, self.nn.layers):
             self.assertEqual(grad.shape, layer.weights.shape)
-        print("Backward pass gradient shape test passed.")
+
+    def test_gd(self):
+        """
+        Test the gradient descent method to ensure weights are updated.
+        """
+        sample_input = self.X_train[0]
+        target = self.y_train[0]
+        output = self.nn.forward(sample_input, sigmoid)
+        gradients = self.nn.backward(output, target, sigmoid_derivative, mse_derivative)
+        initial_weights = [layer.weights.copy() for layer in self.nn.layers]
+
+        self.nn.gd(gradients, learning_rate=0.1)
+
+        # Verify that weights have been updated
+        for initial, layer in zip(initial_weights, self.nn.layers):
+            self.assertFalse(np.array_equal(initial, layer.weights), "Weights should have been updated.")
 
     def test_training_process(self):
         """
         Train the network on the Iris dataset for a few epochs and test if it improves accuracy.
         """
         initial_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
-
-        # Train for a small number of epochs to see if accuracy improves, using MSE derivative as loss function
         self.nn.train(
             self.X_train, self.y_train,
             epochs=10,
@@ -83,12 +85,8 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
             activation_derivative=sigmoid_derivative,
             loss_derivative=mse_derivative
         )
-
         final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
-
-        # Check if accuracy improved after training
         self.assertGreater(final_accuracy, initial_accuracy)
-        print("Training process accuracy improvement test passed.")
 
     def calculate_accuracy(self, network, X, y):
         """

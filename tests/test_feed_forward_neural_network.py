@@ -3,8 +3,8 @@ import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from midterm_nueralnetworks.feed_forward_neural_network import (
-    FeedforwardNeuralNetwork, relu, relu_derivative, sigmoid, sigmoid_derivative, mse_derivative
+from midterm_nueralnetworks.neural_network.feed_forward_neural_network import (
+    FeedforwardNeuralNetwork, sigmoid, sigmoid_derivative, mse_derivative
 )
 
 

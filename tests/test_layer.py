@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from midterm_nueralnetworks.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Layer
 
 class TestLayer(unittest.TestCase):
 

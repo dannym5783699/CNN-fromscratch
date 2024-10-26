@@ -1,5 +1,5 @@
 import numpy as np
-from midterm_nueralnetworks.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Layer
 
 
 def relu(x):
@@ -8,6 +8,14 @@ def relu(x):
 
 def relu_derivative(x):
     return np.where(x > 0, 1, 0)
+
+
+def tanh(x):
+    return np.tanh(x)
+
+
+def tanh_derivative(x):
+    return 1 - np.tanh(x) ** 2
 
 
 def sigmoid(x):

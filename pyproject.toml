@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 numpy = "^2.1.2"
 scikit-learn = "^1.5.2"
+matplotlib = "^3.9.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -17,3 +18,7 @@ pytest = "^8.3.3"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+case1 = "midterm_nueralnetworks.cases.case_1:main"
+

@@ -21,6 +21,19 @@ def sigmoid_derivative(x):
     return x * (1 - x)
 
 
+def mse_derivative(output, target):
+    """
+    Derivative of Mean Squared Error (MSE) loss with respect to the output.
+    """
+    return output - target
+
+
+def cross_entropy_derivative(output, target):
+    """
+    Derivative of Cross-Entropy loss with respect to the output.
+    """
+    return - (target / output) + ((1 - target) / (1 - output))
+
 
 class FeedforwardNeuralNetwork:
     def __init__(self, layer_sizes):
@@ -43,12 +56,23 @@ class FeedforwardNeuralNetwork:
             inputs = activation_function(inputs)
         return inputs
 
-    def backward(self, output, target, activation_derivative):
+    def backward(self, output, target, activation_derivative, loss_derivative):
         """
         Perform backpropagation to calculate gradients for weights in all layers.
+
+        Parameters:
+        ----------
+        output : numpy.ndarray
+            The output from the network.
+        target : numpy.ndarray
+            The true labels for the output.
+        activation_derivative : callable
+            The derivative of the activation function used in the output layer.
+        loss_derivative : callable
+            The derivative of the loss function with respect to the output.
         """
-        # Calculate the delta for the output layer
-        delta = (output - target) * activation_derivative(output)  # Applies the activation derivative
+        # Calculate the delta for the output layer using the loss derivative
+        delta = loss_derivative(output, target) * activation_derivative(output)
 
         gradients = []  # Store gradients for each layer
 
@@ -79,12 +103,12 @@ class FeedforwardNeuralNetwork:
             print(f"Updating weights for layer with gradient: {grad_weights}")
             layer.weights -= learning_rate * grad_weights  # Update weights
 
-    def train(self, x, y, epochs, learning_rate, activation_function, activation_derivative):
+    def train(self, x, y, epochs, learning_rate, activation_function, activation_derivative, loss_derivative):
         """
         Train the neural network using gradient descent.
         """
         for epoch in range(epochs):
             for xi, yi in zip(x, y):
                 output = self.forward(xi, activation_function)  # Forward pass
-                gradients = self.backward(output, yi, activation_derivative)  # Backpropagation
+                gradients = self.backward(output, yi, activation_derivative, loss_derivative)  # Backpropagation
                 self.update_weights(gradients, learning_rate)  # Update weights

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Layer:
     """
     A class representing a fully connected layer in a feedforward neural network, 

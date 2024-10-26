@@ -7,6 +7,9 @@ from midterm_nueralnetworks.feed_forward_neural_network import (
     FeedforwardNeuralNetwork, relu, relu_derivative, sigmoid, sigmoid_derivative
 )
 
+# Define the Mean Squared Error (MSE) derivative for testing
+def mse_derivative(output, target):
+    return output - target
 
 class TestFeedforwardNeuralNetwork(unittest.TestCase):
 
@@ -56,8 +59,8 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         target = self.y_train[0]
         output = self.nn.forward(sample_input, sigmoid)
 
-        # Backward pass
-        gradients = self.nn.backward(output, target, sigmoid_derivative)
+        # Backward pass with the MSE derivative as the loss function
+        gradients = self.nn.backward(output, target, sigmoid_derivative, mse_derivative)
 
         # Check if gradients were calculated for each layer
         self.assertEqual(len(gradients), len(self.nn.layers))
@@ -71,13 +74,14 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         """
         initial_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
 
-        # Train for a small number of epochs to see if accuracy improves
+        # Train for a small number of epochs to see if accuracy improves, using MSE derivative as loss function
         self.nn.train(
             self.X_train, self.y_train,
             epochs=10,
             learning_rate=0.1,
             activation_function=sigmoid,
-            activation_derivative=sigmoid_derivative
+            activation_derivative=sigmoid_derivative,
+            loss_derivative=mse_derivative
         )
 
         final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)

@@ -105,5 +105,6 @@ class FeedforwardNeuralNetwork:
 
         # Generate and return predictions for the entire dataset after training
         predictions = np.array([self.forward(xi, activation_function) for xi in x])
+        print(predictions)
         return predictions
 

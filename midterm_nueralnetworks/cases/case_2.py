@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
@@ -10,16 +12,14 @@ from midterm_nueralnetworks.neural_network.layer import Layer
 from midterm_nueralnetworks.neural_network.loss import mse_derivative
 from midterm_nueralnetworks.neural_network.utils import get_batches
 
-
 if __name__ == "__main__":
+    fig_folder = Path(__file__).parents[2] / "figures"
+    fig_folder.mkdir(exist_ok=True)
+
     print("Preparing data")
     X, Y = generate_data(101, -3, 3)
     print(X.shape, Y.shape)
-    print(X[:5], Y[:5])
-
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42)
-    
-
+    print(X[:5], Y[:5])    
 
     net = FeedforwardNeuralNetwork([
             Layer(2, 64, "relu"),
@@ -29,54 +29,55 @@ if __name__ == "__main__":
         ]
     )
 
-    MAX_EPOCHS = 2000
-    LR = 1e-5
+    MAX_EPOCHS = 1000
+    LR = 1e-2
     BATCH_SIZE = 32
 
     train_losses = np.zeros(MAX_EPOCHS)
     test_losses = np.zeros(MAX_EPOCHS)
 
     print("training model")
-    print(f"{X_train.shape=}, {Y_train.shape=}")
-    print(f"{X_test.shape=}, {Y_test.shape=}")
     for epoch in range(MAX_EPOCHS):
         batch_losses = []
-        for i, (x_batch, y_batch) in enumerate(get_batches(X_train, Y_train, BATCH_SIZE)):
+        for i, (x_batch, y_batch) in enumerate(get_batches(X, Y, BATCH_SIZE)):
             y_hat = net.forward(x_batch)
             batch_losses.append(mean_squared_error(y_hat, y_batch))
             net.backward(y_hat, y_batch, mse_derivative)
-            net.gd(LR, 0.1)
-            net.zero_grad()            
+            net.gd(LR)
         mean_train_loss = np.mean(batch_losses)
-        test_loss = mean_squared_error(net.forward(X_test), Y_test)
         net.zero_grad()
 
         train_losses[epoch] = mean_train_loss
-        test_losses[epoch] = test_loss
-
         if epoch % 10 == 0:
-            print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}" )
-        
+            print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}" )
         
 
-    plt.plot(train_losses, label="Train Loss")
-    plt.plot(test_losses, label="Test Loss")
-    plt.legend()
-    plt.show()
+    fig, ax = plt.subplots()
+    num_timesteps = 150
 
-    # test 1
     x0 = np.array([1.25, 2.35])
-    for i in range(150):
+    phi_values = np.zeros((num_timesteps, 2))
+    net_values = np.zeros((num_timesteps, 2))
+
+    for i in range(num_timesteps):
         y = Phi(x0)
-        plt.plot(y[0], y[1], 'b.')
+        phi_values[i] = y
         x0 = y
 
-    for i in range(150):
+    for i in range(num_timesteps):
         y = net.forward(x0.reshape(1, -1))[0]
-        plt.plot(y[0], y[1], 'r.')
+        net_values[i] = y
         x0 = y
 
-
-    plt.xlabel('x_1')
-    plt.ylabel('x_2')
+    ax.scatter(phi_values[:, 0], phi_values[:, 1], label="Phi Predictions")
+    ax.scatter(net_values[:, 0], net_values[:, 1], label="Neural Network Predictions")
+    ax.set(
+        title="Van der Pol Oscillator Model Predictions",
+        xlabel="x1",
+        ylabel="x2"
+    )
+    ax.legend()
+    plt.tight_layout()
     plt.show()
+
+    fig.savefig(fig_folder / "vanderpol_prediction.png", dpi=300, bbox_inches='tight')

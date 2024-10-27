@@ -4,7 +4,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import (
-    FeedforwardNeuralNetwork, sigmoid, sigmoid_derivative, mse_derivative
+    FeedforwardNeuralNetwork, sigmoid, sigmoid_derivative, mse_derivative, tanh, tanh_derivative
 )
 
 
@@ -44,6 +44,14 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         output = self.nn.forward(sample_input, sigmoid)
         self.assertEqual(output.shape, (3,))
 
+    def test_forward_pass_with_tanh(self):
+        """
+        Test the forward pass using the tanh activation function.
+        """
+        sample_input = self.X_train[0]
+        output = self.nn.forward(sample_input, tanh)
+        self.assertEqual(output.shape, (3,))
+
     def test_backward_pass(self):
         """
         Test the backward pass to check if gradients are calculated correctly.
@@ -52,6 +60,18 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         target = self.y_train[0]
         output = self.nn.forward(sample_input, sigmoid)
         gradients = self.nn.backward(output, target, sigmoid_derivative, mse_derivative)
+        self.assertEqual(len(gradients), len(self.nn.layers))
+        for grad, layer in zip(gradients, self.nn.layers):
+            self.assertEqual(grad.shape, layer.weights.shape)
+
+    def test_backward_pass_with_tanh(self):
+        """
+        Test the backward pass with the tanh activation function and its derivative.
+        """
+        sample_input = self.X_train[0]
+        target = self.y_train[0]
+        output = self.nn.forward(sample_input, tanh)
+        gradients = self.nn.backward(output, target, tanh_derivative, mse_derivative)
         self.assertEqual(len(gradients), len(self.nn.layers))
         for grad, layer in zip(gradients, self.nn.layers):
             self.assertEqual(grad.shape, layer.weights.shape)
@@ -83,6 +103,39 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
             learning_rate=0.1,
             activation_function=sigmoid,
             activation_derivative=sigmoid_derivative,
+            loss_derivative=mse_derivative
+        )
+        final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
+        self.assertGreater(final_accuracy, initial_accuracy)
+
+    def test_training_with_mini_batches(self):
+        """
+        Train the network using mini-batch gradient descent and verify accuracy improvement.
+        """
+        initial_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
+        self.nn.train(
+            self.X_train, self.y_train,
+            epochs=10,
+            learning_rate=0.1,
+            activation_function=sigmoid,
+            activation_derivative=sigmoid_derivative,
+            loss_derivative=mse_derivative,
+            batch_size=16  # Mini-batch size
+        )
+        final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
+        self.assertGreater(final_accuracy, initial_accuracy)
+
+    def test_training_with_tanh_activation(self):
+        """
+        Train the network with tanh activation function and verify accuracy improvement.
+        """
+        initial_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
+        self.nn.train(
+            self.X_train, self.y_train,
+            epochs=10,
+            learning_rate=0.1,
+            activation_function=tanh,
+            activation_derivative=tanh_derivative,
             loss_derivative=mse_derivative
         )
         final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)

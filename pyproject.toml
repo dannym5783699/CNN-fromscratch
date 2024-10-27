@@ -21,4 +21,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 case1 = "midterm_nueralnetworks.cases.case_1:main"
-
+case2 = "midterm_nueralnetworks.cases.case_2:main"

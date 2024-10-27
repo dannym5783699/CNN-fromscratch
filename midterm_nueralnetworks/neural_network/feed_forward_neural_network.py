@@ -1,47 +1,32 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.layer import Layer
 
-
+# Activation and loss derivatives remain unchanged
 def relu(x):
     return np.maximum(0, x)
-
 
 def relu_derivative(x):
     return np.where(x > 0, 1, 0)
 
-
 def tanh(x):
     return np.tanh(x)
-
 
 def tanh_derivative(x):
     return 1 - np.tanh(x) ** 2
 
-
 def sigmoid(x):
-    # Clip input to prevent overflow in exp() for large values
     x = np.clip(x, -500, 500)
     return 1 / (1 + np.exp(-x))
 
-
 def sigmoid_derivative(x):
-    x = np.clip(x, 1e-7, 1 - 1e-7)  # Clip values to avoid overflow
+    x = np.clip(x, 1e-7, 1 - 1e-7)
     return x * (1 - x)
 
-
 def mse_derivative(output, target):
-    """
-    Derivative of Mean Squared Error (MSE) loss with respect to the output.
-    """
     return output - target
 
-
 def cross_entropy_derivative(output, target):
-    """
-    Derivative of Cross-Entropy loss with respect to the output.
-    """
     return - (target / output) + ((1 - target) / (1 - output))
-
 
 class FeedforwardNeuralNetwork:
     def __init__(self, layer_sizes):
@@ -56,72 +41,69 @@ class FeedforwardNeuralNetwork:
         """
         Perform a forward pass through the network, applying the given activation function.
         """
-        self.inputs = [inputs]  # Store initial input for backpropagation
+        self.inputs = [inputs]
         for layer in self.layers:
             inputs = layer.forward(inputs)
-            self.inputs.append(inputs)  # Store inputs for each layer
+            self.inputs.append(inputs)
             inputs = activation_function(inputs)
         return inputs
 
     def backward(self, output, target, activation_derivative, loss_derivative):
         """
         Perform backpropagation to calculate gradients for weights in all layers.
-
-        Parameters:
-        ----------
-        output : numpy.ndarray
-            The output from the network.
-        target : numpy.ndarray
-            The true labels for the output.
-        activation_derivative : callable
-            The derivative of the activation function used in the output layer.
-        loss_derivative : callable
-            The derivative of the loss function with respect to the output.
         """
-        # Calculate the delta for the output layer using the loss derivative
         delta = loss_derivative(output, target) * activation_derivative(output)
+        gradients = []
 
-        gradients = []  # Store gradients for each layer
-
-        # Backpropagate through the layers in reverse
         for i in reversed(range(len(self.layers))):
             layer = self.layers[i]
-
-            # Include bias in the previous layer's inputs
             prev_input = np.append(self.inputs[i], 1)
-
-            # Calculate gradients for weights
             grad_weights = np.outer(delta, prev_input)
             gradients.append(grad_weights)
-
-            # Compute delta for the next layer if it's not the input layer
             if i != 0:
                 delta = np.dot(layer.weights[:, :-1].T, delta) * activation_derivative(self.inputs[i])
 
-        # Reverse to match forward order if necessary
         gradients.reverse()
         return gradients
 
     def gd(self, gradients, learning_rate):
         """
         Performs gradient descent to update weights based on the computed gradients.
-
-        Parameters:
-        ----------
-        gradients : list of numpy.ndarray
-            A list containing the gradients for each layer, computed from backpropagation.
-        learning_rate : float
-            The learning rate to control the size of the weight updates.
         """
         for layer, grad_weights in zip(self.layers, gradients):
             layer.weights -= learning_rate * grad_weights
 
-    def train(self, x, y, epochs, learning_rate, activation_function, activation_derivative, loss_derivative):
+    def train(self, x, y, epochs, learning_rate, activation_function, activation_derivative, loss_derivative,
+              batch_size=32):
         """
-        Train the neural network using gradient descent.
+        Train the neural network using mini-batch gradient descent and return final predictions.
         """
+        num_samples = x.shape[0]
         for epoch in range(epochs):
-            for xi, yi in zip(x, y):
-                output = self.forward(xi, activation_function)  # Forward pass
-                gradients = self.backward(output, yi, activation_derivative, loss_derivative)  # Backpropagation
-                self.gd(gradients, learning_rate)  # Update weights using gradient descent
+            indices = np.random.permutation(num_samples)
+            x_shuffled = x[indices]
+            y_shuffled = y[indices]
+
+            for start in range(0, num_samples, batch_size):
+                end = start + batch_size
+                x_batch = x_shuffled[start:end]
+                y_batch = y_shuffled[start:end]
+
+                # Initialize cumulative gradients for mini-batch averaging
+                batch_gradients = [np.zeros_like(layer.weights) for layer in self.layers]
+
+                for xi, yi in zip(x_batch, y_batch):
+                    output = self.forward(xi, activation_function)
+                    gradients = self.backward(output, yi, activation_derivative, loss_derivative)
+
+                    for i, grad in enumerate(gradients):
+                        batch_gradients[i] += grad
+
+                # Average gradients for the batch and update weights
+                batch_gradients = [g / len(x_batch) for g in batch_gradients]
+                self.gd(batch_gradients, learning_rate)
+
+        # Generate and return predictions for the entire dataset after training
+        predictions = np.array([self.forward(xi, activation_function) for xi in x])
+        return predictions
+

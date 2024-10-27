@@ -2,11 +2,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from vanderpol_data import Phi, generate_data
 
-from midterm_nueralnetworks.neural_network.feed_forward_neural_network import FeedforwardNeuralNetwork
+from midterm_nueralnetworks.cases.vanderpol_data import Phi, generate_data
+from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
+    FeedforwardNeuralNetwork
 from midterm_nueralnetworks.neural_network.layer import Layer
 from midterm_nueralnetworks.neural_network.loss import mse_derivative
+
 
 def get_batches(X, Y, batch_size):
     indices = np.arange(len(X))

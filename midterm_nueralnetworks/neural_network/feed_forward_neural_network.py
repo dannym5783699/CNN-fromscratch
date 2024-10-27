@@ -52,6 +52,7 @@ class FeedforwardNeuralNetwork:
             The learning rate to control the size of the weight updates.
         """
         for layer in self.layers:
+            np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
             layer.weights -= learning_rate * (layer.grad_weights + lambda_reg * layer.weights)
 
     def zero_grad(self):

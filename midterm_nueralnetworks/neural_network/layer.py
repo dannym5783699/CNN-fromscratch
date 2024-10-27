@@ -33,7 +33,7 @@ class Layer:
         self.preactivations = None
         self.grad_weights = None
 
-        self.weights = np.random.randn(output_size, input_size + 1)
+        self.weights = np.random.randn(output_size, input_size + 1) * np.sqrt(2 / input_size)
 
     def forward(self, X):
         """
@@ -62,7 +62,7 @@ class Layer:
 
         return self.activations
 
-    def backward(self, delta):
+    def backward(self, delta, delta_threshold=1e-6):
         """
         Performs the backward pass, calculating gradients for the layer's weights and the delta to pass to previous layers.
 
@@ -80,6 +80,7 @@ class Layer:
         # Calculate the derivative of the activation function on the preactivations
 
         delta *= self._activation_derivative(self.preactivations)
+        delta = np.where(np.abs(delta) < delta_threshold, 0, delta) # Apply thresholding to the delta for stability
 
         prev_input_with_bias = self.concat_bias(self.prev_input)
 

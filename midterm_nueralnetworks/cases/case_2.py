@@ -11,12 +11,16 @@ from midterm_nueralnetworks.neural_network.loss import mse_derivative
 
 
 def get_batches(X, Y, batch_size):
+
     indices = np.arange(len(X))
     np.random.shuffle(indices)
 
-    for i in range(0, len(X), batch_size):
-        batch_indices = indices[i:i+batch_size]
-        yield X[batch_indices], Y[batch_indices]
+    if batch_size is None:
+        yield X, Y
+    else:
+        for i in range(0, len(X), batch_size):
+            batch_indices = indices[i:i+batch_size]
+            yield X[batch_indices], Y[batch_indices]
 
 if __name__ == "__main__":
     print("Preparing data")

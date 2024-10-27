@@ -23,11 +23,11 @@ def initialize_network():
     """
     Initialize the Feedforward Neural Network with a specified architecture.
     """
-    return FeedforwardNeuralNetwork(Layer(1,10).setActivation(act.tanh, act.tanh_derivative),
-                                    Layer(10,1).setActivation(act.tanh, act.tanh_derivative) )  # 1 input, 10 hidden, 1 output
+    return FeedforwardNeuralNetwork([Layer(1,10, 'tanh'),
+                                    Layer(10,1, 'tanh')])  # 1 input, 10 hidden, 1 output
 
 
-def train_network(nn, x_train, y_train, epochs=1000, learning_rate=0.005):
+def train_network(nn : FeedforwardNeuralNetwork, x_train, y_train, epochs=1000, learning_rate=0.005):
     """
     Train the neural network to approximate sin(x).
     """
@@ -35,10 +35,10 @@ def train_network(nn, x_train, y_train, epochs=1000, learning_rate=0.005):
         predictions = []
         for xi, yi in zip(x_train, y_train):
             # Forward pass, backward pass, and gradient descent update
-            output = nn.forward(xi)
-            gradients = nn.backward(output, yi, loss.mse_derivative)
-            nn.gd(gradients, learning_rate)
-            predictions.append(output.item())  # Collect predictions for evaluation
+            y_hat = nn.forward(xi.reshape(-1, 1))
+            nn.backward(y_hat, yi, loss.mse_derivative)
+            nn.gd(learning_rate)
+            predictions.append(y_hat.item())  # Collect predictions for evaluation
 
         # Print MSE every 100 epochs
         if epoch % 100 == 0:

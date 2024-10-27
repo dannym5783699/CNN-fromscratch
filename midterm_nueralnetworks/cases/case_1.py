@@ -1,8 +1,11 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network import activation as act
+from midterm_nueralnetworks.neural_network import loss as loss
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import (
-    FeedforwardNeuralNetwork, tanh, tanh_derivative, mse_derivative
+    FeedforwardNeuralNetwork
 )
 
 
@@ -20,7 +23,8 @@ def initialize_network():
     """
     Initialize the Feedforward Neural Network with a specified architecture.
     """
-    return FeedforwardNeuralNetwork([1, 10, 1])  # 1 input, 10 hidden, 1 output
+    return FeedforwardNeuralNetwork(Layer(1,10).setActivation(act.tanh, act.tanh_derivative),
+                                    Layer(10,1).setActivation(act.tanh, act.tanh_derivative) )  # 1 input, 10 hidden, 1 output
 
 
 def train_network(nn, x_train, y_train, epochs=1000, learning_rate=0.005):
@@ -31,8 +35,8 @@ def train_network(nn, x_train, y_train, epochs=1000, learning_rate=0.005):
         predictions = []
         for xi, yi in zip(x_train, y_train):
             # Forward pass, backward pass, and gradient descent update
-            output = nn.forward(xi, tanh)
-            gradients = nn.backward(output, yi, tanh_derivative, mse_derivative)
+            output = nn.forward(xi)
+            gradients = nn.backward(output, yi, loss.mse_derivative)
             nn.gd(gradients, learning_rate)
             predictions.append(output.item())  # Collect predictions for evaluation
 

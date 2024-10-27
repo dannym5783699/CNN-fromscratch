@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Layer:
     """
     A class representing a fully connected layer in a feedforward neural network, 
@@ -18,6 +17,8 @@ class Layer:
         output_size : int
             The number of neurons in the current layer (or output layer).
         """
+        self.activation = lambda x:x
+        self.actDer = lambda _:1
 
         self.weights = np.random.randn(output_size, input_size + 1)
 
@@ -46,3 +47,18 @@ class Layer:
 
         self.z = np.dot(self.weights, inputs_with_bias)
         return self.z
+    
+
+    def setActivation(self, activation, derivative):
+        self.activation = activation
+        self.actDer = derivative
+        return self
+    
+    def applyActivation(self, x):
+        return self.activation(x)
+    
+    def activation_derivative(self, x):
+        return self.actDer(x)
+
+    
+

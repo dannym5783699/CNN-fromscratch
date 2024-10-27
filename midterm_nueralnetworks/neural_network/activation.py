@@ -32,6 +32,10 @@ def linear(x):
 def linear_derivative(x):
     return np.ones_like(x)
 
+def softmax(x):
+    exp = np.exp(x)
+    return exp / np.sum(exp)
+
 activation_funcs = {
     'relu': relu,
     'tanh': tanh,

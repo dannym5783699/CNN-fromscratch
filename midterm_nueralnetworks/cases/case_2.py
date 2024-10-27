@@ -8,19 +8,8 @@ from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
     FeedforwardNeuralNetwork
 from midterm_nueralnetworks.neural_network.layer import Layer
 from midterm_nueralnetworks.neural_network.loss import mse_derivative
+from midterm_nueralnetworks.neural_network.utils import get_batches
 
-
-def get_batches(X, Y, batch_size):
-
-    indices = np.arange(len(X))
-    np.random.shuffle(indices)
-
-    if batch_size is None:
-        yield X, Y
-    else:
-        for i in range(0, len(X), batch_size):
-            batch_indices = indices[i:i+batch_size]
-            yield X[batch_indices], Y[batch_indices]
 
 if __name__ == "__main__":
     print("Preparing data")

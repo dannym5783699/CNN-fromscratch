@@ -3,8 +3,11 @@ import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import midterm_nueralnetworks.neural_network.activation as act
+import midterm_nueralnetworks.neural_network.loss as loss
+from midterm_nueralnetworks.neural_network.layer import Layer
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import (
-    FeedforwardNeuralNetwork, sigmoid, sigmoid_derivative, mse_derivative
+    FeedforwardNeuralNetwork
 )
 
 
@@ -32,16 +35,16 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         self.X_test = scaler.transform(X_test)
         self.y_train = y_train
         self.y_test = y_test
-
         # Initialize the neural network
-        self.nn = FeedforwardNeuralNetwork([4, 5, 3])  # 4 input, 5 hidden, 3 output nodes
+        self.nn = FeedforwardNeuralNetwork(Layer(4,5).setActivation(act.relu, act.relu_derivative),
+                                           Layer(5,3).setActivation(act.sigmoid, act.sigmoid_derivative))  # 4 input, 5 hidden, 3 output nodes
 
     def test_forward_pass(self):
         """
         Test the forward pass on a sample input to check if the output has the correct shape.
         """
         sample_input = self.X_train[0]
-        output = self.nn.forward(sample_input, sigmoid)
+        output = self.nn.forward(sample_input)
         self.assertEqual(output.shape, (3,))
 
     def test_backward_pass(self):
@@ -50,8 +53,8 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         """
         sample_input = self.X_train[0]
         target = self.y_train[0]
-        output = self.nn.forward(sample_input, sigmoid)
-        gradients = self.nn.backward(output, target, sigmoid_derivative, mse_derivative)
+        output = self.nn.forward(sample_input)
+        gradients = self.nn.backward(output, target, loss.mse_derivative)
         self.assertEqual(len(gradients), len(self.nn.layers))
         for grad, layer in zip(gradients, self.nn.layers):
             self.assertEqual(grad.shape, layer.weights.shape)
@@ -62,8 +65,8 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         """
         sample_input = self.X_train[0]
         target = self.y_train[0]
-        output = self.nn.forward(sample_input, sigmoid)
-        gradients = self.nn.backward(output, target, sigmoid_derivative, mse_derivative)
+        output = self.nn.forward(sample_input)
+        gradients = self.nn.backward(output, target, loss.mse_derivative)
         initial_weights = [layer.weights.copy() for layer in self.nn.layers]
 
         self.nn.gd(gradients, learning_rate=0.1)
@@ -81,9 +84,7 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
             self.X_train, self.y_train,
             epochs=10,
             learning_rate=0.1,
-            activation_function=sigmoid,
-            activation_derivative=sigmoid_derivative,
-            loss_derivative=mse_derivative
+            loss_derivative=loss.mse_derivative
         )
         final_accuracy = self.calculate_accuracy(self.nn, self.X_test, self.y_test)
         self.assertGreater(final_accuracy, initial_accuracy)
@@ -94,7 +95,7 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         """
         correct = 0
         for x, target in zip(X, y):
-            output = network.forward(x, sigmoid)
+            output = network.forward(x)
             predicted = np.argmax(output)
             actual = np.argmax(target)
             if predicted == actual:

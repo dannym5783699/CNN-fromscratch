@@ -1,25 +1,23 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.layer import Layer
-
+from typing import List
 
 class FeedforwardNeuralNetwork:
-    def __init__(self, *layers):
+    def __init__(self, layers : List[Layer]):
         """
         Initializes the Feedforward Neural Network with the given layer sizes.
         """
-        self.layers = list(layers)
-        self.inputs = []  # To store inputs for backpropagation
+        self.layers = layers
 
-    def forward(self, inputs):
+    def forward(self, X):
         """
-        Perform a forward pass through the network, applying the given activation function.
+        Perform a forward pass through the network.
         """
-        self.inputs = [inputs]  # Store initial input for backpropagation
+        activation = X
         for layer in self.layers:
-            inputs = layer.forward(inputs)
-            self.inputs.append(inputs)  # Store inputs for each layer
-            inputs = layer.applyActivation(inputs)
-        return inputs
+            activation = layer.forward(activation)
+
+        return activation
 
     def backward(self, output, target, loss_derivative):
         """
@@ -37,30 +35,12 @@ class FeedforwardNeuralNetwork:
             The derivative of the loss function with respect to the output.
         """
         # Calculate the delta for the output layer using the loss derivative
-        delta = loss_derivative(output, target) * self.layers[len(self.layers)-1].activation_derivative(output)
+        delta = loss_derivative(output, target)
 
-        gradients = []  # Store gradients for each layer
+        for layer in reversed(self.layers):
+            delta = layer.backward(delta)
 
-        # Backpropagate through the layers in reverse
-        for i in reversed(range(len(self.layers))):
-            layer = self.layers[i]
-
-            # Include bias in the previous layer's inputs
-            prev_input = np.append(self.inputs[i], 1)
-
-            # Calculate gradients for weights
-            grad_weights = np.outer(delta, prev_input)
-            gradients.append(grad_weights)
-
-            # Compute delta for the next layer if it's not the input layer
-            if i != 0:
-                delta = np.dot(layer.weights[:, :-1].T, delta) * layer.activation_derivative(self.inputs[i])
-
-        # Reverse to match forward order if necessary
-        gradients.reverse()
-        return gradients
-
-    def gd(self, gradients, learning_rate):
+    def gd(self, learning_rate, lambda_reg=0):
         """
         Performs gradient descent to update weights based on the computed gradients.
 
@@ -71,8 +51,15 @@ class FeedforwardNeuralNetwork:
         learning_rate : float
             The learning rate to control the size of the weight updates.
         """
-        for layer, grad_weights in zip(self.layers, gradients):
-            layer.weights -= learning_rate * grad_weights
+        for layer in self.layers:
+            layer.weights -= learning_rate * (layer.grad_weights + lambda_reg * layer.weights)
+
+    def zero_grad(self):
+        """
+        Zero out the gradients for all layers.
+        """
+        for layer in self.layers:
+            layer.grad_weights = np.zeros_like(layer.weights)
 
     def train(self, x, y, epochs, learning_rate, loss_derivative):
         """
@@ -81,5 +68,5 @@ class FeedforwardNeuralNetwork:
         for epoch in range(epochs):
             for xi, yi in zip(x, y):
                 output = self.forward(xi)  # Forward pass
-                gradients = self.backward(output, yi, loss_derivative)  # Backpropagation
-                self.gd(gradients, learning_rate)  # Update weights using gradient descent
+                self.backward(output, yi, loss_derivative)  # Backpropagation
+                self.gd(self, learning_rate)  # Update weights using gradient descent

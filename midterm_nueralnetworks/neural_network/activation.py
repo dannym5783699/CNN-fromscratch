@@ -25,3 +25,23 @@ def sigmoid(x):
 def sigmoid_derivative(x):
     x = np.clip(x, 1e-7, 1 - 1e-7)  # Clip values to avoid overflow
     return x * (1 - x)
+
+def linear(x):
+    return x
+
+def linear_derivative(x):
+    return np.ones_like(x)
+
+activation_funcs = {
+    'relu': relu,
+    'tanh': tanh,
+    'sigmoid': sigmoid,
+    'linear': linear
+}
+    
+activation_derivatives = {
+    'relu': relu_derivative,
+    'tanh': tanh_derivative,
+    'sigmoid': sigmoid_derivative,
+    'linear': linear_derivative
+}

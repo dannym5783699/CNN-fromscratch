@@ -32,20 +32,22 @@ def linear(x):
 def linear_derivative(x):
     return np.ones_like(x)
 
-def softmax(x):
-    exp = np.exp(x)
-    return exp / np.sum(exp)
+def softmax(z):
+    exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
+    return exp_z / np.sum(exp_z, axis=1, keepdims=True)
 
 activation_funcs = {
     'relu': relu,
     'tanh': tanh,
     'sigmoid': sigmoid,
-    'linear': linear
+    'linear': linear,
+    'softmax': softmax
 }
     
 activation_derivatives = {
     'relu': relu_derivative,
     'tanh': tanh_derivative,
     'sigmoid': sigmoid_derivative,
-    'linear': linear_derivative
+    'linear': linear_derivative,
+    'softmax': None
 }

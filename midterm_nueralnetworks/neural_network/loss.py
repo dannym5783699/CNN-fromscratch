@@ -11,6 +11,12 @@ def cross_entropy_derivative(output, target):
     """
     return - (target / output) + ((1 - target) / (1 - output))
 
+def NLL_derivative_softmax(output, target):
+    """
+    Derivative of Negative Log Likelihood loss with respect to the output for softmax activation.
+    """
+    return output - target
+
 get_loss_derivative = {
     "mse": mse_derivative,
     "cross_entropy": cross_entropy_derivative

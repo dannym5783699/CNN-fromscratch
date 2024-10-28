@@ -7,7 +7,7 @@ class Layer:
     with the bias term absorbed into the weight matrix.
     """
 
-    def __init__(self, input_size : int, output_size : int, activation : str = "relu"):
+    def __init__(self, input_size : int, output_size : int, activation : str = "relu", final_layer=False):
         """
         Initializes the Layer class.
 
@@ -28,6 +28,7 @@ class Layer:
         except KeyError:
             raise ValueError(f"Activation function {activation} not supported")
 
+        self.final_layer = final_layer
         self.prev_input = None
         self.activations = None
         self.preactivations = None
@@ -79,7 +80,10 @@ class Layer:
         """
         # Calculate the derivative of the activation function on the preactivations
 
-        delta *= self._activation_derivative(self.preactivations)
+        if not(self.final_layer and self.activation == "softmax"):
+            # Standard derivative handling
+            delta *= self._activation_derivative(self.preactivations)
+
         delta = np.where(np.abs(delta) < delta_threshold, 0, delta) # Apply thresholding to the delta for stability
 
         prev_input_with_bias = self.concat_bias(self.prev_input)

@@ -6,7 +6,8 @@ from sklearn.datasets import load_digits
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
     FeedforwardNeuralNetwork
 from midterm_nueralnetworks.neural_network.layer import Layer
-from midterm_nueralnetworks.neural_network.loss import mse_derivative
+from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
+from sklearn.preprocessing import OneHotEncoder
 
 
 def get_batches(X, Y, batch_size):
@@ -17,26 +18,33 @@ def get_batches(X, Y, batch_size):
         batch_indices = indices[i:i+batch_size]
         yield X[batch_indices], Y[batch_indices]
 
+def nll_loss(output, target):
+    """Calculate the Negative Log Likelihood Loss for a batch."""
+    # Clip output to avoid log(0)
+    output = np.clip(output, 1e-10, 1 - 1e-10)
+    return -np.sum(target * np.log(output)) / target.shape[0]
+
 if __name__ == "__main__":
     print("Preparing data")
     X, Y = load_digits(return_X_y=True)
+
+    encoder = OneHotEncoder()
+    Y = encoder.fit_transform(Y.reshape(-1, 1)).toarray()
+
     print(X.shape, Y.shape)
     print(X[:5], Y[:5])
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42)
-    
-
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42, stratify=Y)
 
     net = FeedforwardNeuralNetwork([
-            Layer(64, 128, "relu"),
-            Layer(128, 64, "relu"),
             Layer(64, 64, "relu"),
-            Layer(64, 10, "linear")
+            Layer(64, 32, "relu"),
+            Layer(32, 10, "softmax", final_layer=True)
         ]
     )
 
-    MAX_EPOCHS = 2000
-    LR = 1e-5
+    MAX_EPOCHS = 500
+    LR = 1e-3
     BATCH_SIZE = 32
 
     train_losses = np.zeros(MAX_EPOCHS)
@@ -48,13 +56,13 @@ if __name__ == "__main__":
     for epoch in range(MAX_EPOCHS):
         batch_losses = []
         for i, (x_batch, y_batch) in enumerate(get_batches(X_train, Y_train, BATCH_SIZE)):
-            y_hat = net.forward(x_batch)
-            batch_losses.append(mean_squared_error(y_hat, y_batch))
-            net.backward(y_hat, y_batch, mse_derivative)
-            net.gd(LR, 0.1)
+            y_pred = net.forward(x_batch)
+            batch_losses.append(nll_loss(y_pred, y_batch))
+            net.backward(y_pred, y_batch, NLL_derivative_softmax)
+            net.gd(LR)
             net.zero_grad()            
         mean_train_loss = np.mean(batch_losses)
-        test_loss = mean_squared_error(net.forward(X_test), Y_test)
+        test_loss = nll_loss(net.forward(X_test), Y_test)
         net.zero_grad()
 
         train_losses[epoch] = mean_train_loss
@@ -68,21 +76,4 @@ if __name__ == "__main__":
     plt.plot(train_losses, label="Train Loss")
     plt.plot(test_losses, label="Test Loss")
     plt.legend()
-    plt.show()
-
-    # test 1
-    x0 = np.array([1.25, 2.35])
-    for i in range(150):
-        y = Phi(x0)
-        plt.plot(y[0], y[1], 'b.')
-        x0 = y
-
-    for i in range(150):
-        y = net.forward(x0.reshape(1, -1))[0]
-        plt.plot(y[0], y[1], 'r.')
-        x0 = y
-
-
-    plt.xlabel('x_1')
-    plt.ylabel('x_2')
     plt.show()

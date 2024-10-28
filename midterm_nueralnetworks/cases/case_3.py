@@ -8,9 +8,13 @@ from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
 from midterm_nueralnetworks.neural_network.layer import Layer
 from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
 from sklearn.preprocessing import OneHotEncoder
-
+from sklearn.metrics import ConfusionMatrixDisplay
+from pathlib import Path
 
 def main():
+    fig_folder = Path(__file__).parents[2] / "figures"
+    fig_folder.mkdir(exist_ok=True)
+
     print("Preparing data")
     X, Y = load_digits(return_X_y=True)
 
@@ -24,13 +28,14 @@ def main():
 
     net = FeedforwardNeuralNetwork([
         Layer(64, 64, "relu"),
+        Layer(64, 64, "relu"),
         Layer(64, 32, "relu"),
         Layer(32, 10, "softmax", final_layer=True)
     ]
     )
 
     MAX_EPOCHS = 500
-    LR = 1e-3
+    LR = 1e-2
     BATCH_SIZE = 32
 
     train_losses = np.zeros(MAX_EPOCHS)
@@ -57,11 +62,22 @@ def main():
         if epoch % 10 == 0:
             print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}")
 
+
     plt.plot(train_losses, label="Train Loss")
     plt.plot(test_losses, label="Test Loss")
     plt.legend()
     plt.show()
 
+    y_test_pred = net.forward(X_test)
+    
+    # plot confusion matrix
+    fig, ax = plt.subplots()
+    y_test_pred = np.argmax(y_test_pred, axis=1)
+    y_test = np.argmax(Y_test, axis=1)
+    cm = ConfusionMatrixDisplay.from_predictions(y_test, y_test_pred, ax=ax)
+    fig_path = fig_folder / "digits_confusion_matrix.png"
+    plt.tight_layout()
+    fig.savefig(fig_path, bbox_inches="tight", dpi=300)
 
 def get_batches(X, Y, batch_size):
     indices = np.arange(len(X))

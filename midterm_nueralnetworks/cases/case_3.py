@@ -10,21 +10,7 @@ from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
 from sklearn.preprocessing import OneHotEncoder
 
 
-def get_batches(X, Y, batch_size):
-    indices = np.arange(len(X))
-    np.random.shuffle(indices)
-
-    for i in range(0, len(X), batch_size):
-        batch_indices = indices[i:i+batch_size]
-        yield X[batch_indices], Y[batch_indices]
-
-def nll_loss(output, target):
-    """Calculate the Negative Log Likelihood Loss for a batch."""
-    # Clip output to avoid log(0)
-    output = np.clip(output, 1e-10, 1 - 1e-10)
-    return -np.sum(target * np.log(output)) / target.shape[0]
-
-if __name__ == "__main__":
+def main():
     print("Preparing data")
     X, Y = load_digits(return_X_y=True)
 
@@ -37,10 +23,10 @@ if __name__ == "__main__":
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42, stratify=Y)
 
     net = FeedforwardNeuralNetwork([
-            Layer(64, 64, "relu"),
-            Layer(64, 32, "relu"),
-            Layer(32, 10, "softmax", final_layer=True)
-        ]
+        Layer(64, 64, "relu"),
+        Layer(64, 32, "relu"),
+        Layer(32, 10, "softmax", final_layer=True)
+    ]
     )
 
     MAX_EPOCHS = 500
@@ -60,7 +46,7 @@ if __name__ == "__main__":
             batch_losses.append(nll_loss(y_pred, y_batch))
             net.backward(y_pred, y_batch, NLL_derivative_softmax)
             net.gd(LR)
-            net.zero_grad()            
+            net.zero_grad()
         mean_train_loss = np.mean(batch_losses)
         test_loss = nll_loss(net.forward(X_test), Y_test)
         net.zero_grad()
@@ -69,11 +55,29 @@ if __name__ == "__main__":
         test_losses[epoch] = test_loss
 
         if epoch % 10 == 0:
-            print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}" )
-        
-        
+            print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}")
 
     plt.plot(train_losses, label="Train Loss")
     plt.plot(test_losses, label="Test Loss")
     plt.legend()
     plt.show()
+
+
+def get_batches(X, Y, batch_size):
+    indices = np.arange(len(X))
+    np.random.shuffle(indices)
+
+    for i in range(0, len(X), batch_size):
+        batch_indices = indices[i:i + batch_size]
+        yield X[batch_indices], Y[batch_indices]
+
+
+def nll_loss(output, target):
+    """Calculate the Negative Log Likelihood Loss for a batch."""
+    # Clip output to avoid log(0)
+    output = np.clip(output, 1e-10, 1 - 1e-10)
+    return -np.sum(target * np.log(output)) / target.shape[0]
+
+
+if __name__ == "__main__":
+    main()

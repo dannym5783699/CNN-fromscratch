@@ -12,21 +12,22 @@ from midterm_nueralnetworks.neural_network.layer import Layer
 from midterm_nueralnetworks.neural_network.loss import mse_derivative
 from midterm_nueralnetworks.neural_network.utils import get_batches
 
-if __name__ == "__main__":
+
+def main():
     fig_folder = Path(__file__).parents[2] / "figures"
     fig_folder.mkdir(exist_ok=True)
 
     print("Preparing data")
     X, Y = generate_data(101, -3, 3)
     print(X.shape, Y.shape)
-    print(X[:5], Y[:5])    
+    print(X[:5], Y[:5])
 
     net = FeedforwardNeuralNetwork([
-            Layer(2, 64, "relu"),
-            Layer(64, 64, "relu"),
-            Layer(64, 64, "relu"),
-            Layer(64, 2, "linear")
-        ]
+        Layer(2, 64, "relu"),
+        Layer(64, 64, "relu"),
+        Layer(64, 64, "relu"),
+        Layer(64, 2, "linear")
+    ]
     )
 
     MAX_EPOCHS = 1000
@@ -49,8 +50,7 @@ if __name__ == "__main__":
 
         train_losses[epoch] = mean_train_loss
         if epoch % 10 == 0:
-            print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}" )
-        
+            print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}")
 
     fig, ax = plt.subplots()
     num_timesteps = 150
@@ -81,3 +81,7 @@ if __name__ == "__main__":
     plt.show()
 
     fig.savefig(fig_folder / "vanderpol_prediction.png", dpi=300, bbox_inches='tight')
+
+
+if __name__ == "__main__":
+    main()

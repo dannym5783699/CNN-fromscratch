@@ -13,7 +13,7 @@ from midterm_nueralnetworks.neural_network.loss import mse_derivative
 from midterm_nueralnetworks.neural_network.utils import get_batches
 
 
-if __name__ == "__main__":
+def main():
     fig_folder = Path(__file__).parents[2] / "figures"
     fig_folder.mkdir(exist_ok=True)
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print(X[:5], Y[:5])
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
-    
+
     MAX_EPOCHS = 1000
     LR = 1e-2
     batch_sizes = [8, 32, 64, 128]
@@ -33,11 +33,11 @@ if __name__ == "__main__":
     for batch_size, ax in zip(batch_sizes, axs.flatten()):
 
         net = FeedforwardNeuralNetwork([
-                Layer(2, 64, "relu"),
-                Layer(64, 64, "relu"),
-                Layer(64, 64, "relu"),
-                Layer(64, 2, "linear")
-            ]
+            Layer(2, 64, "relu"),
+            Layer(64, 64, "relu"),
+            Layer(64, 64, "relu"),
+            Layer(64, 2, "linear")
+        ]
         )
 
         train_losses = np.zeros(MAX_EPOCHS)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
                 batch_losses.append(mean_squared_error(y_hat, y_batch))
                 net.backward(y_hat, y_batch, mse_derivative)
                 net.gd(LR)
-                net.zero_grad()            
+                net.zero_grad()
             mean_train_loss = np.mean(batch_losses)
             test_loss = mean_squared_error(net.forward(X_test), Y_test)
             net.zero_grad()
@@ -62,9 +62,8 @@ if __name__ == "__main__":
             test_losses[epoch] = test_loss
 
             if epoch % 10 == 0:
-                print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}" )
-            
-            
+                print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}")
+
         ax.plot(train_losses, label="Batch Mean Train Loss")
         ax.plot(test_losses, label="Test Loss")
         ax.set(
@@ -74,7 +73,11 @@ if __name__ == "__main__":
         )
         ax.set_yscale('log')
         ax.legend()
-    
+
     plt.tight_layout()
     fpath = fig_folder / "case_2_batch_size_comparison.png"
     plt.savefig(fpath, dpi=300, bbox_inches='tight')
+
+
+if __name__ == "__main__":
+    main()

@@ -24,4 +24,4 @@ case1 = "midterm_nueralnetworks.cases.case_1:main"
 case2 = "midterm_nueralnetworks.cases.case_2:main"
 case2BatchExp = "midterm_nueralnetworks.cases.case_2_batch_experimentation:main"
 case3 = "midterm_nueralnetworks.cases.case_3:main"
-
+case3BatchExp = "midterm_nueralnetworks.cases.case_3_batch_experimentation:main"

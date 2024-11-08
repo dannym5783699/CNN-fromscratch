@@ -112,3 +112,4 @@ class FeedforwardNeuralNetwork:
                 output = self.forward(xi, activation_function)  # Forward pass
                 gradients = self.backward(output, yi, activation_derivative, loss_derivative)  # Backpropagation
                 self.update_weights(gradients, learning_rate)  # Update weights
+

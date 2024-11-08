@@ -18,8 +18,15 @@ class Layer:
         output_size : int
             The number of neurons in the current layer (or output layer).
         """
+        self.weigths = np.random.uniform(
+            #Xavier initialization for weights uniform distribution
+            -np.sqrt(6 /(input_size + output_size)),
+             np.sqrt(6 / (input_size + output_size)),
+             (output_size, input_size + 1)
+        )
 
-        self.weights = np.random.randn(output_size, input_size + 1)
+        self.grad_weights = np.zeros_like(self.weights)
+        #self.weights = np.random.randn(output_size, input_size + 1)
 
     def forward(self, inputs):
         """

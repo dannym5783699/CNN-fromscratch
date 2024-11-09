@@ -41,28 +41,7 @@ class FeedforwardNeuralNetwork:
             delta = layer.backward(delta)
 
 
-    def backward_nest(self, output, target, loss_derivative):
-        """
-        Perform backpropagation to calculate gradients for weights in all layers.
-
-        Parameters:
-        ----------
-        output : numpy.ndarray
-            The output from the network.
-        target : numpy.ndarray
-            The true labels for the output.
-        activation_derivative : callable
-            The derivative of the activation function used in the output layer.
-        loss_derivative : callable
-            The derivative of the loss function with respect to the output.
-        """
-        # Calculate the delta for the output layer using the loss derivative
-        delta = loss_derivative(output, target)
-
-        for layer in reversed(self.layers):
-            delta = layer.backward_nest(delta)
-
-    def gd(self, learning_rate, lambda_reg=0):
+    def gd(self, learning_rate, friction=0, lambda_reg=0):
         """
         Performs gradient descent to update weights based on the computed gradients.
 
@@ -72,27 +51,12 @@ class FeedforwardNeuralNetwork:
             A list containing the gradients for each layer, computed from backpropagation.
         learning_rate : float
             The learning rate to control the size of the weight updates.
-        """
-        for layer in self.layers:
-            np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
-            layer.weights -= learning_rate * (layer.grad_weights + lambda_reg * layer.weights)
-
-    def gd_nest(self, learning_rate, friction = 0.5, lambda_reg=0):
-        """
-        Performs gradient descent to update weights based on the computed gradients.
-
-        Parameters:
-        ----------
-        gradients : list of numpy.ndarray
-            A list containing the gradients for each layer, computed from backpropagation.
-        learning_rate : float
-            The learning rate to control the size of the weight updates.
-        friction : a value between 0 and 1 to change contribution of current momentum to update.    
         """
         for layer in self.layers:
             np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
             layer.momentum = (layer.momentum*friction) - (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
             layer.weights += layer.momentum
+
 
     def zero_grad(self):
         """
@@ -101,7 +65,7 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             layer.grad_weights = np.zeros_like(layer.weights)
 
-    def train(self, x, y, epochs, learning_rate, loss_derivative):
+    def train(self, x, y, epochs, learning_rate, loss_derivative, friction):
         """
         Train the neural network using gradient descent.
         """
@@ -109,14 +73,4 @@ class FeedforwardNeuralNetwork:
             for xi, yi in zip(x, y):
                 output = self.forward(xi)  # Forward pass
                 self.backward(output, yi, loss_derivative)  # Backpropagation
-                self.gd(self, learning_rate)  # Update weights using gradient descent
-
-    def train_nest(self, x, y, epochs, learning_rate, loss_derivative, friction):
-        """
-        Train the neural network using gradient descent.
-        """
-        for epoch in range(epochs):
-            for xi, yi in zip(x, y):
-                output = self.forward(xi)  # Forward pass
-                self.backward_nest(output, yi, loss_derivative)  # Backpropagation
-                self.gd_nest(self, learning_rate)  # Update weights using gradient descent
+                self.gd(self, learning_rate, friction)  # Update weights using gradient descent

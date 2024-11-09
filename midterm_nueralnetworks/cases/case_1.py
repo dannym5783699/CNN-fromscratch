@@ -37,8 +37,8 @@ def train_network(nn : FeedforwardNeuralNetwork, x_train, y_train, epochs=1000, 
         for xi, yi in zip(x_train, y_train):
             # Forward pass, backward pass, and gradient descent update
             y_hat = nn.forward(xi.reshape(-1, 1))
-            nn.backward_nest(y_hat, yi, loss.mse_derivative)
-            nn.gd_nest(learning_rate, friction=0.7)
+            nn.backward(y_hat, yi, loss.mse_derivative)
+            nn.gd(learning_rate, friction=0.7)
             predictions.append(y_hat.item())  # Collect predictions for evaluation
 
         # Print MSE every 100 epochs

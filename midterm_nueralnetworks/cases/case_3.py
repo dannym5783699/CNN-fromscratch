@@ -49,8 +49,8 @@ def main():
         for i, (x_batch, y_batch) in enumerate(get_batches(X_train, Y_train, BATCH_SIZE)):
             y_pred = net.forward(x_batch)
             batch_losses.append(nll_loss(y_pred, y_batch))
-            net.backward(y_pred, y_batch, NLL_derivative_softmax)
-            net.gd(LR)
+            net.backward_nest(y_pred, y_batch, NLL_derivative_softmax)
+            net.gd_nest(LR)
             net.zero_grad()
         mean_train_loss = np.mean(batch_losses)
         test_loss = nll_loss(net.forward(X_test), Y_test)

@@ -30,7 +30,8 @@ def main():
     ]
     )
 
-    MAX_EPOCHS = 1000
+    MAX_EPOCHS = 10
+    #LR = 1e-2
     LR = 1e-2
     BATCH_SIZE = 32
 
@@ -43,8 +44,8 @@ def main():
         for i, (x_batch, y_batch) in enumerate(get_batches(X, Y, BATCH_SIZE)):
             y_hat = net.forward(x_batch)
             batch_losses.append(mean_squared_error(y_hat, y_batch))
-            net.backward(y_hat, y_batch, mse_derivative)
-            net.gd(LR)
+            net.backward_nest(y_hat, y_batch, mse_derivative)
+            net.gd_nest(LR)
         mean_train_loss = np.mean(batch_losses)
         net.zero_grad()
 

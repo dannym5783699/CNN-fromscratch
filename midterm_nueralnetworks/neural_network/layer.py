@@ -35,6 +35,7 @@ class Layer:
         self.grad_weights = None
 
         self.weights = np.random.randn(output_size, input_size + 1) * np.sqrt(2 / input_size)
+        self.momentum = np.zeros_like(self.weights)
 
     def forward(self, X):
         """
@@ -93,6 +94,40 @@ class Layer:
 
         # Compute the delta to pass to the previous layer
         delta_prev = np.dot(delta, self.weights[:, :-1])
+
+        return delta_prev
+    
+    def backward_nest(self, delta, delta_threshold=1e-6):
+        """
+        Performs the backward pass, calculating gradients for the layer's weights and the delta to pass to previous layers.
+
+        Parameters:
+        ----------
+        delta : numpy.ndarray
+            The error signal from the subsequent layer, scaled by the derivative of the loss with respect to
+            this layer's output.
+
+        Returns:
+        -------
+        numpy.ndarray
+            The delta to propagate to the previous layer.
+        """
+        # Calculate the derivative of the activation function on the preactivations
+
+        if not(self.final_layer and self.activation == "softmax"):
+            # Standard derivative handling
+            delta *= self._activation_derivative(self.preactivations)
+
+        #delta = np.where(np.abs(delta) < delta_threshold, 0, delta) # Apply thresholding to the delta for stability
+
+        prev_input_with_bias = self.concat_bias(self.prev_input)
+
+        # Compute the gradient for weights as the outer product of delta and previous input
+        self.grad_weights = np.dot(delta.T, prev_input_with_bias) / delta.shape[0]
+        
+
+        # Compute the delta to pass to the previous layer including the momentum.
+        delta_prev = np.dot(delta, (self.weights[:, :-1] + self.momentum[:,:-1]))
 
         return delta_prev
     

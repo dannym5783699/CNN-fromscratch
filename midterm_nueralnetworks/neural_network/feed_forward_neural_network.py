@@ -8,6 +8,9 @@ class FeedforwardNeuralNetwork:
         Initializes the Feedforward Neural Network with the given layer sizes.
         """
         self.layers = layers
+        self.p1 = 0.9
+        self.p2 = 0.999
+        self.t = 1
 
     def forward(self, X):
         """
@@ -54,8 +57,36 @@ class FeedforwardNeuralNetwork:
         """
         for layer in self.layers:
             np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
-            layer.momentum = (layer.momentum*friction) - (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
-            layer.weights += layer.momentum
+            gradientcalc = (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
+            if friction == 0:
+              layer.momentum = (layer.momentum*friction) - gradientcalc
+              layer.weights += layer.momentum
+            else:
+              layer.weights -= gradientcalc
+
+    def adam(self, learning_rate, lambda_reg=0):
+        """
+        Performs gradient descent to update weights based on the computed gradients.
+
+        Parameters:
+        ----------
+        gradients : list of numpy.ndarray
+            A list containing the gradients for each layer, computed from backpropagation.
+        learning_rate : float
+            The learning rate to control the size of the weight updates.
+        """
+        for layer in self.layers:
+            np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
+            #update moments
+            layer.secondm =  (self.p2*layer.secondm)+ ((1-self.p2)*(layer.grad_weights**2))
+            layer.firstm = (self.p1*layer.firstm) + ((1-self.p1)*(layer.grad_weights))
+            #bias correction before weight update
+            second = layer.secondm/(1-(self.p2**self.t))
+            first = layer.firstm/(1-(self.p1**self.t))
+            self.t += 1
+            #update weights
+            layer.weights -= (learning_rate/(np.sqrt(second)+1e-8)) * (first)
+
 
 
     def zero_grad(self):

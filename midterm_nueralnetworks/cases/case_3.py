@@ -35,7 +35,7 @@ def main():
     )
 
     MAX_EPOCHS = 500
-    LR = 1e-2
+    LR = 1e-4
     BATCH_SIZE = 32
 
     train_losses = np.zeros(MAX_EPOCHS)
@@ -50,7 +50,7 @@ def main():
             y_pred = net.forward(x_batch)
             batch_losses.append(nll_loss(y_pred, y_batch))
             net.backward(y_pred, y_batch, NLL_derivative_softmax)
-            net.gd(LR, friction=0.8)
+            net.adam(LR)
             net.zero_grad()
         mean_train_loss = np.mean(batch_losses)
         test_loss = nll_loss(net.forward(X_test), Y_test)

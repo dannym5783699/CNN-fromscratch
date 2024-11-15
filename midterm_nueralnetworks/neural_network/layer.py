@@ -98,6 +98,25 @@ class Layer:
         delta_prev = np.dot(delta, (self.weights[:, :-1] + self.momentum[:,:-1]))
 
         return delta_prev
+
+    def compute_hessian_approx(self, lambda_reg=1e-5):
+        """
+        Approximates the Hessian matrix for this layer using the outer product of the gradient.
+
+        Parameters:
+        ----------
+        lambda_reg : float
+            Small regularization term to ensure invertibility.
+
+        Returns:
+        -------
+        np.ndarray
+            The approximated Hessian matrix for this layer.
+        """
+        flattened_grad = self.grad_weights.flatten()
+        hessian_approx = np.outer(flattened_grad, flattened_grad)
+        hessian_approx += np.eye(hessian_approx.shape[0]) * lambda_reg  # Regularization
+        return hessian_approx
     
     @staticmethod
     def concat_bias(X : np.ndarray) -> np.ndarray:

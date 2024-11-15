@@ -64,6 +64,29 @@ class FeedforwardNeuralNetwork:
             else:
               layer.weights -= gradientcalc
 
+    def newtons_method(self, learning_rate, lambda_reg=0):
+        """
+        Performs Newton's method to update weights based on the Hessian and gradient.
+
+        Parameters:
+        ----------
+        learning_rate : float
+            The learning rate to scale the weight update.
+        lambda_reg : float
+            Regularization parameter.
+        """
+        for layer in self.layers:
+            # Hessian approximation computed by the layer's own method
+            hessian_approx = layer.compute_hessian_approx(lambda_reg)
+
+            try:
+                hessian_inv = np.linalg.pinv(hessian_approx)
+            except np.linalg.LinAlgError:
+                hessian_inv = np.eye(hessian_approx.shape[0]) * lambda_reg
+
+            update_step = learning_rate * np.dot(hessian_inv, layer.grad_weights.flatten()).reshape(layer.weights.shape)
+            layer.weights += update_step
+
     def adam(self, learning_rate, lambda_reg=0):
         """
         Performs gradient descent to update weights based on the computed gradients.
@@ -96,12 +119,21 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             layer.grad_weights = np.zeros_like(layer.weights)
 
-    def train(self, x, y, epochs, learning_rate, loss_derivative, friction):
+    def train(self, x, y, epochs, learning_rate, loss_derivative, friction, method="gd"):
         """
-        Train the neural network using gradient descent.
+        Train the neural network using the specified optimization method.
+
+        Parameters:
+        ----------
+        method : str
+            The optimization method to use: "gd" for gradient descent or "newton" for Newton's method.
         """
         for epoch in range(epochs):
             for xi, yi in zip(x, y):
-                output = self.forward(xi)  # Forward pass
-                self.backward(output, yi, loss_derivative)  # Backpropagation
-                self.gd(self, learning_rate, friction)  # Update weights using gradient descent
+                output = self.forward(xi)
+                self.backward(output, yi, loss_derivative)
+
+                if method == "gd":
+                    self.gd(learning_rate, friction)
+                elif method == "newton":
+                    self.newtons_method(learning_rate)

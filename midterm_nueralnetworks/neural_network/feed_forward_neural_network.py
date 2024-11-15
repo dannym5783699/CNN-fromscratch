@@ -2,8 +2,9 @@ import numpy as np
 from midterm_nueralnetworks.neural_network.layer import Layer
 from typing import List
 
+
 class FeedforwardNeuralNetwork:
-    def __init__(self, layers : List[Layer]):
+    def __init__(self, layers: List[Layer]):
         """
         Initializes the Feedforward Neural Network with the given layer sizes.
         """
@@ -43,7 +44,6 @@ class FeedforwardNeuralNetwork:
         for layer in reversed(self.layers):
             delta = layer.backward(delta)
 
-
     def gd(self, learning_rate, friction=0, lambda_reg=0):
         """
         Performs gradient descent to update weights based on the computed gradients.
@@ -59,10 +59,10 @@ class FeedforwardNeuralNetwork:
             np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
             gradientcalc = (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
             if friction == 0:
-              layer.momentum = (layer.momentum*friction) - gradientcalc
-              layer.weights += layer.momentum
+                layer.momentum = (layer.momentum * friction) - gradientcalc
+                layer.weights += layer.momentum
             else:
-              layer.weights -= gradientcalc
+                layer.weights -= gradientcalc
 
     def newtons_method(self, learning_rate, lambda_reg=0):
         """
@@ -101,16 +101,14 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
             #update moments
-            layer.secondm =  (self.p2*layer.secondm)+ ((1-self.p2)*(layer.grad_weights**2))
-            layer.firstm = (self.p1*layer.firstm) + ((1-self.p1)*(layer.grad_weights))
+            layer.secondm = (self.p2 * layer.secondm) + ((1 - self.p2) * (layer.grad_weights ** 2))
+            layer.firstm = (self.p1 * layer.firstm) + ((1 - self.p1) * (layer.grad_weights))
             #bias correction before weight update
-            second = layer.secondm/(1-(self.p2**self.t))
-            first = layer.firstm/(1-(self.p1**self.t))
+            second = layer.secondm / (1 - (self.p2 ** self.t))
+            first = layer.firstm / (1 - (self.p1 ** self.t))
             self.t += 1
             #update weights
-            layer.weights -= (learning_rate/(np.sqrt(second)+1e-8)) * (first)
-
-
+            layer.weights -= (learning_rate / (np.sqrt(second) + 1e-8)) * (first)
 
     def zero_grad(self):
         """

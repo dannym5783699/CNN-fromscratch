@@ -58,7 +58,7 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
             gradientcalc = (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
-            if friction == 0:
+            if friction != 0:
                 layer.momentum = (layer.momentum * friction) - gradientcalc
                 layer.weights += layer.momentum
             else:
@@ -135,3 +135,4 @@ class FeedforwardNeuralNetwork:
                     self.gd(learning_rate, friction)
                 elif method == "newton":
                     self.newtons_method(learning_rate)
+

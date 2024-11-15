@@ -160,3 +160,4 @@ class Layer:
     def concat_bias(X: np.ndarray) -> np.ndarray:
         """Concatenates a bias term to the input data."""
         return np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
+

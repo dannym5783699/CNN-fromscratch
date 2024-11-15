@@ -1,13 +1,15 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
 
+
 class Layer:
     """
     A class representing a fully connected layer in a feedforward neural network, 
     with the bias term absorbed into the weight matrix.
     """
 
-    def __init__(self, input_size : int, output_size : int, activation : str = "relu", final_layer=False, weight_init = "he_normal"):
+    def __init__(self, input_size: int, output_size: int, activation: str = "relu", final_layer=False,
+                 weight_init="he_normal"):
         """
         Initializes the Layer class.
 
@@ -41,8 +43,8 @@ class Layer:
         self.momentum = np.zeros_like(self.weights)
         self.firstm = np.zeros_like(self.weights)
         self.secondm = np.zeros_like(self.weights)
-    
-    def initialize_weights(self, input_size : int, output_size : int, weight_init : str = "he_normal") -> np.ndarray:
+
+    def initialize_weights(self, input_size: int, output_size: int, weight_init: str = "he_normal") -> np.ndarray:
         """
         Initializes the weights of the layer.
 
@@ -72,7 +74,7 @@ class Layer:
             weights = np.zeros((output_size, input_size + 1))
         else:
             raise ValueError(f"Weight initialization method {weight_init} not supported")
-        
+
         return weights
 
     def forward(self, X):
@@ -119,11 +121,11 @@ class Layer:
         """
         # Calculate the derivative of the activation function on the preactivations
 
-        if not(self.final_layer and self.activation == "softmax"):
+        if not (self.final_layer and self.activation == "softmax"):
             # Standard derivative handling
             delta *= self._activation_derivative(self.preactivations)
 
-        delta = np.where(np.abs(delta) < delta_threshold, 0, delta) # Apply thresholding to the delta for stability
+        delta = np.where(np.abs(delta) < delta_threshold, 0, delta)  # Apply thresholding to the delta for stability
 
         prev_input_with_bias = self.concat_bias(self.prev_input)
 
@@ -131,7 +133,7 @@ class Layer:
         self.grad_weights = np.dot(delta.T, prev_input_with_bias) / delta.shape[0]
 
         # Compute the delta to pass to the previous layer
-        delta_prev = np.dot(delta, (self.weights[:, :-1] + self.momentum[:,:-1]))
+        delta_prev = np.dot(delta, (self.weights[:, :-1] + self.momentum[:, :-1]))
 
         return delta_prev
 
@@ -153,8 +155,8 @@ class Layer:
         hessian_approx = np.outer(flattened_grad, flattened_grad)
         hessian_approx += np.eye(hessian_approx.shape[0]) * lambda_reg  # Regularization
         return hessian_approx
-    
+
     @staticmethod
-    def concat_bias(X : np.ndarray) -> np.ndarray:
+    def concat_bias(X: np.ndarray) -> np.ndarray:
         """Concatenates a bias term to the input data."""
         return np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)

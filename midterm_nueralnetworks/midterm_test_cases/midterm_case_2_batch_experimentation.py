@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 
 from pathlib import Path
 
-from midterm_nueralnetworks.cases.vanderpol_data import Phi, generate_data
+from midterm_nueralnetworks.midterm_test_cases.vanderpol_data import Phi, generate_data
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
     FeedforwardNeuralNetwork
 from midterm_nueralnetworks.neural_network.layer import Layer

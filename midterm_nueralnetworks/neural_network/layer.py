@@ -7,7 +7,7 @@ class Layer:
     with the bias term absorbed into the weight matrix.
     """
 
-    def __init__(self, input_size : int, output_size : int, activation : str = "relu", final_layer=False):
+    def __init__(self, input_size : int, output_size : int, activation : str = "relu", final_layer=False, weight_init = "he_normal"):
         """
         Initializes the Layer class.
 
@@ -19,6 +19,9 @@ class Layer:
             The number of neurons in the current layer (or output layer).
         activation : str
             The activation function to use for the layer. Default is 'relu'.
+        weight_init : str
+            The initialization method to use for the weights. Default is 'he_normal'. Can be one of
+            'he_normal', 'xavier_uniform', 'random', or 'zeros'.
         """
 
         try:
@@ -34,10 +37,43 @@ class Layer:
         self.preactivations = None
         self.grad_weights = None
 
-        self.weights = np.random.randn(output_size, input_size + 1) * np.sqrt(2 / input_size)
+        self.weights = self.initialize_weights(input_size, output_size, weight_init)
         self.momentum = np.zeros_like(self.weights)
         self.firstm = np.zeros_like(self.weights)
         self.secondm = np.zeros_like(self.weights)
+    
+    def initialize_weights(self, input_size : int, output_size : int, weight_init : str = "he_normal") -> np.ndarray:
+        """
+        Initializes the weights of the layer.
+
+        Parameters:
+        ----------
+        input_size : int
+            The number of neurons in the previous layer (or input layer).
+        output_size : int
+            The number of neurons in the current layer (or output layer).
+        weight_init : str
+            The initialization method to use for the weights. Default is 'he_normal'. Can be one of
+            'he_normal', 'xavier_uniform', 'random', or 'zeros'.
+            
+        Returns:
+        -------
+        np.ndarray
+            The initialized weights.
+        """
+        if weight_init == "he_normal":
+            weights = np.random.randn(output_size, input_size + 1) * np.sqrt(2 / input_size)
+        elif weight_init == "xavier_uniform":
+            limit = np.sqrt(6 / (input_size + output_size))
+            weights = np.random.uniform(-limit, limit, (output_size, input_size + 1))
+        elif weight_init == "random":
+            weights = np.random.randn(output_size, input_size + 1)
+        elif weight_init == "zeros":
+            weights = np.zeros((output_size, input_size + 1))
+        else:
+            raise ValueError(f"Weight initialization method {weight_init} not supported")
+        
+        return weights
 
     def forward(self, X):
         """

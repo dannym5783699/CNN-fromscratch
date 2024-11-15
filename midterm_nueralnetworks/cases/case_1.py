@@ -24,6 +24,7 @@ def initialize_network():
     Initialize the Feedforward Neural Network with a specified architecture.
     """
     return FeedforwardNeuralNetwork([Layer(1,10, 'tanh'),
+                                     Layer(10,10, 'tanh'),
                                     Layer(10,1, 'tanh')])  # 1 input, 10 hidden, 1 output
 
 
@@ -37,7 +38,7 @@ def train_network(nn : FeedforwardNeuralNetwork, x_train, y_train, epochs=1000, 
             # Forward pass, backward pass, and gradient descent update
             y_hat = nn.forward(xi.reshape(-1, 1))
             nn.backward(y_hat, yi, loss.mse_derivative)
-            nn.gd(learning_rate)
+            nn.gd(learning_rate, friction=0.7)
             predictions.append(y_hat.item())  # Collect predictions for evaluation
 
         # Print MSE every 100 epochs

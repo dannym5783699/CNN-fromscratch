@@ -35,6 +35,9 @@ class Layer:
         self.grad_weights = None
 
         self.weights = np.random.randn(output_size, input_size + 1) * np.sqrt(2 / input_size)
+        self.momentum = np.zeros_like(self.weights)
+        self.firstm = np.zeros_like(self.weights)
+        self.secondm = np.zeros_like(self.weights)
 
     def forward(self, X):
         """
@@ -92,7 +95,7 @@ class Layer:
         self.grad_weights = np.dot(delta.T, prev_input_with_bias) / delta.shape[0]
 
         # Compute the delta to pass to the previous layer
-        delta_prev = np.dot(delta, self.weights[:, :-1])
+        delta_prev = np.dot(delta, (self.weights[:, :-1] + self.momentum[:,:-1]))
 
         return delta_prev
     

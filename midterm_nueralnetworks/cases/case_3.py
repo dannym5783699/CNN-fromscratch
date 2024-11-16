@@ -50,7 +50,7 @@ def main():
             y_pred = net.forward(x_batch)
             batch_losses.append(nll_loss(y_pred, y_batch))
             net.backward(y_pred, y_batch, NLL_derivative_softmax)
-            net.adam(LR)
+            net.gd(LR, 0.9)
             net.zero_grad()
         mean_train_loss = np.mean(batch_losses)
         test_loss = nll_loss(net.forward(X_test), Y_test)

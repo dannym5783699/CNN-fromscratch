@@ -78,7 +78,7 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             layer.weights += layer.get_newtons_update(learning_rate, lambda_reg)
 
-    def adam(self, learning_rate, lambda_reg=0):
+    def adam(self, learning_rate, p1=0.9, p2=0.999, lambda_reg=0):
         """
         Performs gradient descent to update weights based on the computed gradients.
 
@@ -89,6 +89,8 @@ class FeedforwardNeuralNetwork:
         learning_rate : float
             The learning rate to control the size of the weight updates.
         """
+        self.p1 = p1
+        self.p2 = p2
         for layer in self.layers:
             np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
             #update moments

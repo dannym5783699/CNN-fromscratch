@@ -76,16 +76,7 @@ class FeedforwardNeuralNetwork:
             Regularization parameter.
         """
         for layer in self.layers:
-            # Hessian approximation computed by the layer's own method
-            hessian_approx = layer.compute_hessian_approx(lambda_reg)
-
-            try:
-                hessian_inv = np.linalg.pinv(hessian_approx)
-            except np.linalg.LinAlgError:
-                hessian_inv = np.eye(hessian_approx.shape[0]) * lambda_reg
-
-            update_step = learning_rate * np.dot(hessian_inv, layer.grad_weights.flatten()).reshape(layer.weights.shape)
-            layer.weights += update_step
+            layer.weights += layer.get_newtons_update(learning_rate, lambda_reg)
 
     def adam(self, learning_rate, lambda_reg=0):
         """

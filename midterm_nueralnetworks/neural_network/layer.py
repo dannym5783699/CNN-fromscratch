@@ -137,24 +137,33 @@ class Layer:
 
         return delta_prev
 
-    def compute_hessian_approx(self, lambda_reg=1e-5):
+    def get_newtons_update(self, learning_rate, lambda_reg):
         """
-        Approximates the Hessian matrix for this layer using the outer product of the gradient.
+        Computes the update step for the weights using Newton's method.
 
         Parameters:
         ----------
+        learning_rate : float
+            The learning rate to scale the weight update.
         lambda_reg : float
-            Small regularization term to ensure invertibility.
+            Regularization parameter.
 
         Returns:
         -------
         np.ndarray
-            The approximated Hessian matrix for this layer.
+            The update step for the weights.
         """
         flattened_grad = self.grad_weights.flatten()
-        hessian_approx = np.outer(flattened_grad, flattened_grad)
-        hessian_approx += np.eye(hessian_approx.shape[0]) * lambda_reg  # Regularization
-        return hessian_approx
+
+        # Compute the diagonal approximation of the Hessian matrix instead of the inverse
+        hessian_diag_approx = np.square(flattened_grad) + lambda_reg 
+
+        # Compute the update step using the diagonal approximation
+        update_step_flat = -flattened_grad / hessian_diag_approx 
+
+        update_step = update_step_flat.reshape(self.grad_weights.shape) * learning_rate
+
+        return update_step
 
     @staticmethod
     def concat_bias(X: np.ndarray) -> np.ndarray:

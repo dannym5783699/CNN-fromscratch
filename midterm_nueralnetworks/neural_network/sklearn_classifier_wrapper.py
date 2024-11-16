@@ -94,18 +94,13 @@ class SklearnFFNN(BaseEstimator, ClassifierMixin):
                 self.network_.backward(y_pred, y_batch, loss_deriv)
                 optimizer()
                 self.network_.zero_grad()
-                batch_train_losses.append(loss(y_pred, y_batch))
-
-            self.train_loss_[epoch] = np.mean(batch_train_losses)
-            self.test_loss_[epoch] = loss(self.network_.forward(X), y)
-            self.network_.zero_grad()
 
     def predict(self, X):
         """Predict class labels."""
         y_prob = self.predict_proba(X)
-
-        if len(self.classes_) == 2:
-            return (y_prob[:, 1] > 0.5).astype(int)
+        if len(self.classes_) == 1:
+            y_pred = (y_prob[:, 0] > 0.5).astype(int)
+            return y_pred
         else:
             class_indices = np.argmax(y_prob, axis=1)
             one_hot_predictions = np.zeros_like(y_prob)

@@ -20,7 +20,7 @@ def batch_size_test_xavier_weight():
 
     MAX_EPOCHS = 5000
     LR = 1e-4
-    friction_weights = [.2, .21, .22, .23]  # List of batch sizes to experiment with
+    friction_weights = [.2, .21, .9, .95]  # List of batch sizes to experiment with
 
     fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 
@@ -35,11 +35,12 @@ def batch_size_test_xavier_weight():
 
         train_losses = np.zeros(MAX_EPOCHS)
         test_losses = np.zeros(MAX_EPOCHS)
+        dif = np.zeros(MAX_EPOCHS)
 
         print(f"Training model with friction_weights {friction_weight}")
         for epoch in range(MAX_EPOCHS):
             batch_losses = []
-            for i, (x_batch, y_batch) in enumerate(get_batches(X_train, Y_train, 128)):
+            for i, (x_batch, y_batch) in enumerate(get_batches(X_train, Y_train, 50)):
                 y_pred = net.forward(x_batch)
                 batch_losses.append(nll_loss(y_pred, y_batch))
                 net.backward(y_pred, y_batch, NLL_derivative_softmax)
@@ -51,12 +52,14 @@ def batch_size_test_xavier_weight():
 
             train_losses[epoch] = mean_train_loss
             test_losses[epoch] = test_loss
+            dif[epoch] = abs(test_loss - mean_train_loss)
 
             if epoch % 10 == 0:
-                print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}")
+                print(f"Epoch {str(epoch).zfill(2)}, Mean Train Loss: {mean_train_loss}, Test Loss: {test_loss}, Dif: {dif[epoch]}")
 
         ax.plot(train_losses, label="Train Loss")
         ax.plot(test_losses, label="Test Loss")
+        ax.plot(dif, label="Difference")
         ax.set(
             xlabel="Epoch",
             ylabel="Log Loss",

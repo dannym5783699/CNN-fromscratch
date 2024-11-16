@@ -128,4 +128,3 @@ class FeedforwardNeuralNetwork:
                     self.gd(learning_rate, friction)
                 elif method == "newton":
                     self.newtons_method(learning_rate)
-

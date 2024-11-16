@@ -22,7 +22,7 @@ def batch_size_test_with_adam():
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42, stratify=Y)
 
     MAX_EPOCHS = 5000
-    LR = 1e-5
+    LR = 1e-6
     batch_sizes = [32, 64, 128, 256]  # List of batch sizes to experiment with
 
     fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
@@ -47,7 +47,7 @@ def batch_size_test_with_adam():
                 y_pred = net.forward(x_batch)
                 batch_losses.append(nll_loss(y_pred, y_batch))
                 net.backward(y_pred, y_batch, NLL_derivative_softmax)
-                net.adam(LR)  # Use Adam optimizer
+                net.adam(LR,.7, p2=.6)  # Use Adam optimizer
                 net.zero_grad()
             mean_train_loss = np.mean(batch_losses)
             test_loss = nll_loss(net.forward(X_test), Y_test)

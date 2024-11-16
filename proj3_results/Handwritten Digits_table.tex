@@ -1,0 +1,36 @@
+\begin{longtable}{llrrrr}
+\caption{Handwritten Digits Results} \label{tab:handwritten_digits_results} \\
+\toprule
+ &  & Fit Time (s) (mean) & Fit Time (s) (std) & Accuracy (mean) & Accuracy (std) \\
+optimizer & max_epochs &  &  &  &  \\
+\midrule
+\endfirsthead
+\caption[]{Handwritten Digits Results} \\
+\toprule
+ &  & Fit Time (s) (mean) & Fit Time (s) (std) & Accuracy (mean) & Accuracy (std) \\
+optimizer & max_epochs &  &  &  &  \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{Continued on next page} \\
+\midrule
+\endfoot
+\bottomrule
+\endlastfoot
+\multirow[t]{3}{*}{Adam} & 10 & 0.57 & 0.06 & 0.57 & 0.38 \\
+ & 50 & 2.64 & 0.21 & 0.62 & 0.33 \\
+ & 100 & 5.00 & 1.05 & 0.70 & 0.27 \\
+\cline{1-6}
+\multirow[t]{3}{*}{GD} & 10 & 0.53 & 0.05 & 0.45 & 0.32 \\
+ & 50 & 2.61 & 0.08 & 0.53 & 0.38 \\
+ & 100 & 5.11 & 0.23 & 0.54 & 0.39 \\
+\cline{1-6}
+\multirow[t]{3}{*}{Nesterov} & 10 & 0.53 & 0.04 & 0.54 & 0.35 \\
+ & 50 & 2.60 & 0.11 & 0.61 & 0.32 \\
+ & 100 & 5.23 & 0.25 & 0.65 & 0.31 \\
+\cline{1-6}
+\multirow[t]{3}{*}{Newton} & 10 & 0.55 & 0.08 & 0.73 & 0.18 \\
+ & 50 & 2.63 & 0.26 & 0.76 & 0.20 \\
+ & 100 & 5.17 & 0.47 & 0.73 & 0.25 \\
+\cline{1-6}
+\end{longtable}

@@ -18,9 +18,9 @@ def batch_size_test_xavier_weight():
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42, stratify=Y)
 
-    MAX_EPOCHS = 1000
+    MAX_EPOCHS = 5000
     LR = 1e-4
-    friction_weights = [.01, .2, .5, .9]  # List of batch sizes to experiment with
+    friction_weights = [.2, .21, .22, .23]  # List of batch sizes to experiment with
 
     fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 

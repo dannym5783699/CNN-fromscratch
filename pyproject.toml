@@ -12,6 +12,8 @@ scikit-learn = "^1.5.2"
 matplotlib = "^3.9.2"
 pandas = "^2.2.3"
 tqdm = "^4.67.0"
+torch = "^2.5.1"
+torchvision = "^0.20.1"
 
 
 [tool.poetry.group.dev.dependencies]

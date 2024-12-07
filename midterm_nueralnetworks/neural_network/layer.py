@@ -213,4 +213,29 @@ class Conv2D(Layer):
 
     def backward(self, delta, delta_threshold=1e-6):
         pass
+
+class MaxPool2D(Layer):
+
+    def __init__(
+            self,
+            kernel_size : int,
+            stride : int = 1,
+            padding : int = 0
+        ):
+        """A class representing a 2D max pooling layer in a convolutional neural network.
+
+        Args:
+            kernel_size (int): size of the pooling window, assuming square window
+            stride (int, optional): Horizontal and vertical stride . Defaults to 1.
+            padding (int, optional): Amount of padding. Defaults to 0.
+        """
+
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
     
+    def forward(self, X):
+        pass
+
+    def backward(self, delta, delta_threshold=1e-6):
+        pass

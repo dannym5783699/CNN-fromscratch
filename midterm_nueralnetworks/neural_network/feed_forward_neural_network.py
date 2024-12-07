@@ -1,10 +1,10 @@
 import numpy as np
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from typing import List
 
 
 class FeedforwardNeuralNetwork:
-    def __init__(self, layers: List[Layer]):
+    def __init__(self, layers: List[Linear]):
         """
         Initializes the Feedforward Neural Network with the given layer sizes.
         """

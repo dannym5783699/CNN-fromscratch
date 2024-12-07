@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network import activation as act
 from midterm_nueralnetworks.neural_network import loss as loss
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import (
@@ -23,9 +23,9 @@ def initialize_network():
     """
     Initialize the Feedforward Neural Network with a specified architecture.
     """
-    return FeedforwardNeuralNetwork([Layer(1,10, 'tanh'),
-                                     Layer(10,10, 'tanh'),
-                                    Layer(10,1, 'tanh')])  # 1 input, 10 hidden, 1 output
+    return FeedforwardNeuralNetwork([Linear(1,10, 'tanh'),
+                                     Linear(10,10, 'tanh'),
+                                    Linear(10,1, 'tanh')])  # 1 input, 10 hidden, 1 output
 
 
 def train_network(nn : FeedforwardNeuralNetwork, x_train, y_train, epochs=1000, learning_rate=0.005):

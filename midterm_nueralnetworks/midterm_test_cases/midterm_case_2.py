@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from midterm_nueralnetworks.midterm_test_cases.vanderpol_data import Phi, generate_data
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
     FeedforwardNeuralNetwork
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.loss import mse_derivative
 from midterm_nueralnetworks.neural_network.utils import get_batches
 
@@ -23,10 +23,10 @@ def main():
     print(X[:5], Y[:5])
 
     net = FeedforwardNeuralNetwork([
-        Layer(2, 64, "relu"),
-        Layer(64, 64, "relu"),
-        Layer(64, 64, "relu"),
-        Layer(64, 2, "linear")
+        Linear(2, 64, "relu"),
+        Linear(64, 64, "relu"),
+        Linear(64, 64, "relu"),
+        Linear(64, 2, "linear")
     ]
     )
 

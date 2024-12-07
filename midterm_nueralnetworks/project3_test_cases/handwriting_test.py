@@ -9,7 +9,7 @@ from sklearn.model_selection import (GridSearchCV, ParameterGrid,
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.sklearn_classifier_wrapper import \
     SklearnFFNN
 
@@ -29,9 +29,9 @@ if __name__ == "__main__":
     y = encoder.fit_transform(y.reshape(-1, 1)).toarray()
 
     layers = [
-        Layer(input_size=64, output_size=64, activation="relu"),
-        Layer(input_size=64, output_size=32, activation="relu"),
-        Layer(input_size=32, output_size=10, activation="softmax", final_layer=True)
+        Linear(input_size=64, output_size=64, activation="relu"),
+        Linear(input_size=64, output_size=32, activation="relu"),
+        Linear(input_size=32, output_size=10, activation="softmax", final_layer=True)
     ]
 
     # Create the pipeline

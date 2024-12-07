@@ -2,7 +2,7 @@ import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
 
 
-class Layer:
+class Linear:
     """
     A class representing a fully connected layer in a feedforward neural network, 
     with the bias term absorbed into the weight matrix.

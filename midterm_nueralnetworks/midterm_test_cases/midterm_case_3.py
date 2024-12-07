@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
     FeedforwardNeuralNetwork
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import ConfusionMatrixDisplay
@@ -27,10 +27,10 @@ def main():
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.05, random_state=42, stratify=Y)
 
     net = FeedforwardNeuralNetwork([
-        Layer(64, 64, "relu"),
-        Layer(64, 64, "relu"),
-        Layer(64, 32, "relu"),
-        Layer(32, 10, "softmax", final_layer=True)
+        Linear(64, 64, "relu"),
+        Linear(64, 64, "relu"),
+        Linear(64, 32, "relu"),
+        Linear(32, 10, "softmax", final_layer=True)
     ]
     )
 

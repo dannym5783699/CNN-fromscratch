@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 
 class TestLayer(unittest.TestCase):
 
@@ -10,7 +10,7 @@ class TestLayer(unittest.TestCase):
         """
         input_size = 3
         output_size = 2
-        layer = Layer(input_size, output_size)
+        layer = Linear(input_size, output_size)
         
         inputs = np.array([0.5, 0.1, -0.3])
         output = layer.forward(inputs)
@@ -26,7 +26,7 @@ class TestLayer(unittest.TestCase):
         output_size = 1
         
         # Initialize the layer with known weights for testing
-        layer = Layer(input_size, output_size)
+        layer = Linear(input_size, output_size)
         layer.weights = np.array([[0.2, 0.4, 0.5]])  # Manually set weights for testing, including bias
         
         inputs = np.array([0.5, -0.3])
@@ -42,7 +42,7 @@ class TestLayer(unittest.TestCase):
         """
         input_size = 3
         output_size = 2
-        layer = Layer(input_size, output_size)
+        layer = Linear(input_size, output_size)
         
         # Set weights and biases to zero
         layer.weights = np.zeros((output_size, input_size + 1))

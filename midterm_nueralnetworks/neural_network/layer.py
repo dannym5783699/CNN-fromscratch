@@ -1,8 +1,20 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
+from abc import ABC, abstractmethod
 
+class Layer(ABC):
+    def __init__(self):
+        pass
 
-class Linear:
+    @abstractmethod
+    def forward(self):
+        pass
+
+    @abstractmethod
+    def backward(self):
+        pass
+
+class Linear(Layer):
     """
     A class representing a fully connected layer in a feedforward neural network, 
     with the bias term absorbed into the weight matrix.

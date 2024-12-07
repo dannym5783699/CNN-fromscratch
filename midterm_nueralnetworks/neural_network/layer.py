@@ -182,3 +182,35 @@ class Linear(Layer):
         """Concatenates a bias term to the input data."""
         return np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
 
+class Conv2D(Layer):
+
+    def __init__(
+            self,
+            in_channels : int,
+            out_channels : int,
+            kernel_size : int,
+            stride : int = 1,
+            padding : int = 0
+        ):
+        """A class representing a 2D convolutional layer in a convolutional neural network.
+
+        Args:
+            in_channels (int): number of input channels 
+            out_channels (int): number of output channels
+            kernel_size (int): size of the kernel, assuming square kernel
+            stride (int, optional): Horizontal and vertical stride . Defaults to 1.
+            padding (int, optional): Amount of padding. Defaults to 0.
+        """
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+    
+    def forward(self, X):
+        pass
+
+    def backward(self, delta, delta_threshold=1e-6):
+        pass
+    

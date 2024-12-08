@@ -210,7 +210,7 @@ class KernelLayer(Layer):
         self.padding = padding
 
     @abstractmethod
-    def _kernel_function(self, X):
+    def _kernel_function(self, X, sample):
         """The kernel function that operates on each patch of the input data."""
         pass
 
@@ -266,7 +266,7 @@ class KernelLayer(Layer):
         self.activations = np.empty(self._activation_shape(X))
 
         for sample in range(batch_size):
-            self.activations[sample] = self._kernel_function(X[sample])
+            self.activations[sample] = self._kernel_function(X[sample], sample)
 
         return self.activations
     
@@ -308,7 +308,7 @@ class Conv2D(KernelLayer):
         self._filters = np.zeros((out_channels, in_channels, kernel_size, kernel_size))
         self.bias = np.zeros(out_channels)
 
-    def _kernel_function(self, X):
+    def _kernel_function(self, X, sample):
         """Perform the convolution operation for a single sample."""
         conv_res =  _2dconvolve(
             self._filters,
@@ -345,7 +345,7 @@ class MaxPool2D(KernelLayer):
             stride=stride,
             padding=padding)
         
-    def _kernel_function(self, X):
+    def _kernel_function(self, X, sample):
         """Perform the max pooling operation for a single sample."""
         return _2dmaxpool(
             self.kernel_size,

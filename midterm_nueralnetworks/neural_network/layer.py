@@ -274,13 +274,13 @@ class KernelLayer(Layer):
     def backward(self, delta, delta_threshold=1e-6):
         pass
 
-class Conv2D(Layer):
+class Conv2D(KernelLayer):
 
     def __init__(
             self,
             in_channels : int,
             out_channels : int,
-            kernel_size : int,
+            kernel_size : _2DShape,
             stride : int = 1,
             padding : int = 0
         ):
@@ -289,55 +289,35 @@ class Conv2D(Layer):
         Args:
             in_channels (int): number of input channels 
             out_channels (int): number of output channels
-            kernel_size (int): size of the kernel, assuming square kernel
+            kernel_size (_2DSahpe): size of the kernel, assuming square kernel. Can be a tuple of (height, width) or a single integer.
+                where height and width are the same.
             stride (int, optional): Horizontal and vertical stride . Defaults to 1.
             padding (int, optional): Amount of padding. Defaults to 0.
         """
 
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.padding = padding
-
-        self.prev_input = None
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding
+        )
 
         # Channel first kernels
         # TODO: Improve initialization method 
         self._filters = np.zeros((out_channels, in_channels, kernel_size, kernel_size))
         self.bias = np.zeros(out_channels)
-    
-    def forward(self, X):
-        self.prev_input = X
 
-        batch_size, in_channels, input_height, input_width = X.shape
-
-        # Calculate the output size for pre-allocating the activation space
-        res_height, res_width = _kernel_op_size(
-            (input_height, input_width),
-            (self.kernel_size, self.kernel_size),
+    def _kernel_function(self, X):
+        """Perform the convolution operation for a single sample."""
+        conv_res =  _2dconvolve(
+            self._filters,
+            X,
             self.stride,
             self.padding
         )
 
-        self.activations = np.empty((
-            batch_size,
-            self.out_channels,
-            res_height,
-            res_width
-        ))
-
-        # TODO: Make this more efficient
-        for sample in range(batch_size):
-            # Perform convolution for each filter
-            for channel in range(self.out_channels):
-                self.activations[sample, channel] = _2dconvolve(
-                    self._filters[channel],
-                    X[sample],
-                    self.stride,
-                    self.padding) + self.bias[channel]
-                
-        return self.activations
+        return conv_res + self.bias[:, None, None]
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

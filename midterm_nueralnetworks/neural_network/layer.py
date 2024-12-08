@@ -1,4 +1,6 @@
 import numpy as np
+from numpy.ma.core import max_val
+
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
 from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size, _2dmaxpool
 from abc import ABC, abstractmethod
@@ -373,4 +375,21 @@ class MaxPool2D(KernelLayer):
         return res
 
     def backward(self, delta, delta_threshold=1e-6):
-        pass
+        """
+        Backward pass for MaxPool2D.
+        """
+        batch_size, n_channels, input_height, input_width = self.prev_input.shape
+        _, _, output_height, output_width = delta.shape
+
+        grad_input = np.zeros_like(self.prev_input)
+
+        for sample in range(batch_size):
+            for channel in range(n_channels):
+                for i in range(output_height):
+                    for j in range(output_width):
+
+                        start_i = i * self.stride
+                        start_j = j * self.stride
+                        end_i = start_i + self.kernel_size
+                        end_j = start_j + self.kernel_size
+

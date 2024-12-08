@@ -2,6 +2,10 @@ import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
 from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size, _2dmaxpool
 from abc import ABC, abstractmethod
+from typing import Tuple, Union
+from functools import cached_property
+
+_2DShape = Union[int, Tuple[int, ...]]
 
 class Layer(ABC):
     def __init__(self):
@@ -183,8 +187,94 @@ class Linear(Layer):
         """Concatenates a bias term to the input data."""
         return np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
 
-# TODO: Implement a Kernel class which will be the parent class for Conv2D and MaxPool2D
-# there's a lot of shared functionality between the two classes that can be abstracted
+class KernelLayer(Layer):
+    """A abstract class representing a layer that operates on patches of the input data using a kernel.
+    Examples include convolutional layers and max pooling layers.
+    """
+    def __init__(
+            self,
+            in_channels : int,
+            out_channels : int,
+            kernel_size : _2DShape,
+            stride : int,
+            padding : int,
+        ):
+
+        if isinstance(kernel_size, int):
+            kernel_size = (kernel_size, kernel_size)
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+
+    @abstractmethod
+    def _kernel_function(self, X):
+        """The kernel function that operates on each patch of the input data."""
+        pass
+
+    def _pad_input(self, X : np.ndarray):
+        """Pad the input data with zeros to account for the padding.
+
+        Args:
+            X (np.ndarray): A 4D array of shape (batch_size, in_channels, height, width)
+
+        Returns:
+            np.ndarray: Padded input data
+        """
+        if self.padding == 0:
+            return X
+        else:
+            return np.pad(
+                X, 
+                ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)),
+                mode='constant',
+                constant_values=0
+                )
+    
+    def _stride_size(self, dim_len, kernel_len):
+        """Calculate the output size of a kernel operation for a single dimension."""
+        return (dim_len + 2 * self.padding - kernel_len) // self.stride + 1
+
+    def _activation_shape(self, X : np.ndarray):
+        """Calculate the output shape of the layer.
+        Should need to be calculated once since the input shape should not change.
+        """
+        batch_size, X_in_channels, input_height, input_width = X.shape
+
+        height = self._stride_size(input_height, self.kernel_size[0])
+        width = self._stride_size(input_width, self.kernel_size[1])
+
+        return batch_size, self.out_channels, height, width
+
+    def forward(self, X : np.ndarray):
+        self.prev_input = X
+
+        batch_size, X_in_channels, input_height, input_width = X.shape
+
+        # If the channels are not specified, assume the input channels are the same as the output channels
+        if self.in_channels is None and self.out_channels is None:
+            self.in_channels = X_in_channels
+            self.out_channels = X_in_channels
+        else:
+            if X_in_channels != self.in_channels:
+                raise ValueError(
+                    f"Number of input channels ({X_in_channels}) does not match expected input channels ({self.in_channels})"
+                )
+
+        self.activations = np.empty(self._activation_shape(X))
+
+        X_padded = self._pad_input(X)
+
+        for sample in range(batch_size):
+            self.activations = self._kernel_function(X_padded)
+
+        return self.activations
+    
+    @abstractmethod
+    def backward(self, delta, delta_threshold=1e-6):
+        pass
 
 class Conv2D(Layer):
 

@@ -219,24 +219,32 @@ class Conv2D(Layer):
     def forward(self, X):
         self.prev_input = X
 
+        batch_size, in_channels, input_height, input_width = X.shape
+
         # Calculate the output size for pre-allocating the activation space
-        height, width = _kernel_op_size(
-            X.shape[1:],
+        res_height, res_width = _kernel_op_size(
+            (input_height, input_width),
             (self.kernel_size, self.kernel_size),
             self.stride,
             self.padding
         )
 
         self.activations = np.empty((
+            batch_size,
             self.out_channels,
-            height,
-            width
+            res_height,
+            res_width
         ))
 
         # TODO: Make this more efficient
-        # Perform convolution for each filter
-        for i in range(self.out_channels):
-            self.activations[i] = _2dconvolve(self._filters[i], X, self.stride, self.padding) + self.bias[i]
+        for sample in range(batch_size):
+            # Perform convolution for each filter
+            for channel in range(self.out_channels):
+                self.activations[sample, channel] = _2dconvolve(
+                    self._filters[channel],
+                    X[sample],
+                    self.stride,
+                    self.padding) + self.bias[channel]
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

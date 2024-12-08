@@ -265,10 +265,8 @@ class KernelLayer(Layer):
 
         self.activations = np.empty(self._activation_shape(X))
 
-        X_padded = self._pad_input(X)
-
         for sample in range(batch_size):
-            self.activations[sample] = self._kernel_function(X_padded)
+            self.activations[sample] = self._kernel_function(X[sample])
 
         return self.activations
     

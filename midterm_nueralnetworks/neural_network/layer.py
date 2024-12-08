@@ -1,6 +1,6 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
-from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size
+from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size, _2dmaxpool
 from abc import ABC, abstractmethod
 
 class Layer(ABC):
@@ -183,6 +183,9 @@ class Linear(Layer):
         """Concatenates a bias term to the input data."""
         return np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
 
+# TODO: Implement a Kernel class which will be the parent class for Conv2D and MaxPool2D
+# there's a lot of shared functionality between the two classes that can be abstracted
+
 class Conv2D(Layer):
 
     def __init__(
@@ -270,7 +273,31 @@ class MaxPool2D(Layer):
         self.padding = padding
     
     def forward(self, X):
-        pass
+        self.prev_input = X
+
+        batch_size, n_channels, input_height, input_width = X.shape
+
+        res_height, res_width = _kernel_op_size(
+            (input_height, input_width),
+            (self.kernel_size, self.kernel_size),
+            self.stride,
+            self.padding
+        )
+
+        self.activations = np.empty((
+            batch_size,
+            n_channels,
+            res_height,
+            res_width
+        ))
+
+        for sample in range(batch_size):
+            self.activations[sample] = _2dmaxpool(
+                (self.kernel_size, self.kernel_size),
+                X[sample],
+                self.stride,
+                self.padding
+            )
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

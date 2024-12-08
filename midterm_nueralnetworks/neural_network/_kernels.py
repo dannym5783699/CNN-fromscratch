@@ -35,3 +35,22 @@ def _2dconvolve(kernel: np.ndarray, X: np.ndarray, stride: int, padding: int):
         res[i, j] = np.sum(patch * kernel)
 
     return res
+
+def _2dmaxpool(kernel_size: Tuple[int, int], X: np.ndarray, stride: int, padding: int):
+    """Perform a 2D max pooling operation on a 3D input tensor"""
+
+    k, n, m = X.shape
+    kern_n, kern_m = kernel_size
+
+    if padding > 0:
+        X = np.pad(X, ((0, 0), (padding, padding), (padding, padding)), mode='constant', constant_values=0)
+    
+    height, width = _kernel_op_size((n, m), (kern_n, kern_m), stride, padding)
+
+    res = np.empty((k ,height, width))
+
+    for i, j in np.ndindex(height, width):
+        patch = X[:, i * stride:i * stride + kern_n, j * stride:j * stride + kern_m]
+        res[:, i, j] = np.max(patch, axis=(1, 2))
+
+    return res

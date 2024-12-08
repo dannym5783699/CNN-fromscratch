@@ -248,6 +248,8 @@ class Conv2D(Layer):
                     X[sample],
                     self.stride,
                     self.padding) + self.bias[channel]
+                
+        return self.activations
 
     def backward(self, delta, delta_threshold=1e-6):
         pass
@@ -298,6 +300,8 @@ class MaxPool2D(Layer):
                 self.stride,
                 self.padding
             )
+
+        return self.activations
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

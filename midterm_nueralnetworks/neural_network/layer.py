@@ -1,5 +1,6 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
+from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size
 from abc import ABC, abstractmethod
 
 class Layer(ABC):
@@ -207,9 +208,35 @@ class Conv2D(Layer):
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
+
+        self.prev_input = None
+
+        # Channel first kernels
+        # TODO: Improve initialization method 
+        self._filters = np.zeros((out_channels, in_channels, kernel_size, kernel_size))
+        self.bias = np.zeros(out_channels)
     
     def forward(self, X):
-        pass
+        self.prev_input = X
+
+        # Calculate the output size for pre-allocating the activation space
+        height, width = _kernel_op_size(
+            X.shape[1:],
+            (self.kernel_size, self.kernel_size),
+            self.stride,
+            self.padding
+        )
+
+        self.activations = np.empty((
+            self.out_channels,
+            height,
+            width
+        ))
+
+        # TODO: Make this more efficient
+        # Perform convolution for each filter
+        for i in range(self.out_channels):
+            self.activations[i] = _2dconvolve(self._filters[i], X, self.stride, self.padding) + self.bias[i]
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

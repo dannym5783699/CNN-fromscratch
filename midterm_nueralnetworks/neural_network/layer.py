@@ -345,14 +345,32 @@ class MaxPool2D(KernelLayer):
             stride=stride,
             padding=padding)
         
+        self.max_positions = None
+        
+    def forward(self, X):
+        if self.in_channels is None and self.out_channels is None:
+            self.in_channels = X.shape[1]
+            self.out_channels = X.shape[1]
+
+        # Initialize the max positions array
+        self.max_positions = np.empty((*self._activation_shape(X), 2), dtype=int)
+
+        return super().forward(X)
+        
     def _kernel_function(self, X, sample):
         """Perform the max pooling operation for a single sample."""
-        return _2dmaxpool(
+
+        res, pos = _2dmaxpool(
             self.kernel_size,
             X,
             self.stride,
             self.padding
         )
+
+        # Store the positions of the max values for backpropagation
+        self.max_positions[sample] = pos
+
+        return res
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

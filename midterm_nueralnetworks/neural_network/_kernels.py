@@ -87,6 +87,7 @@ def _2dmaxpool(kernel_size: Tuple[int, int], X: np.ndarray, stride: int, padding
 
     Returns:
         np.ndarray: Result of the pooling operation (in_channels, height, width)
+        np.ndarray: Position of max values (in_channels, height, width, 2) where the last dimension is (i, j) position of max
     """
 
     k, n, m = X.shape
@@ -103,5 +104,12 @@ def _2dmaxpool(kernel_size: Tuple[int, int], X: np.ndarray, stride: int, padding
     patches = as_strided(X, shape=new_shape, strides=new_strides)
 
     res = np.max(patches, axis=(3, 4))  # Max over kernel dimensions
+    
+    # Find the position of the max values
+    # Note: Numpy does not have an argmax function that operates on multiple dimensions
+    # So we reshape the patches to (k, height, width, kern_n * kern_m) then find the argmax
+    # and convert the flattened index back to (k, height, width)
+    flat_index = np.argmax(patches.reshape(k, height, width, -1), axis=-1)
+    pos = np.stack(np.unravel_index(flat_index, (kern_n, kern_m)), axis=-1)
 
-    return res
+    return res, pos

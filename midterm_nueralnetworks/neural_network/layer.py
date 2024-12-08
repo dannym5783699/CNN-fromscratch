@@ -344,11 +344,11 @@ class Conv2D(Layer):
     def backward(self, delta, delta_threshold=1e-6):
         pass
 
-class MaxPool2D(Layer):
+class MaxPool2D(KernelLayer):
 
     def __init__(
             self,
-            kernel_size : int,
+            kernel_size : _2DShape,
             stride : int = 1,
             padding : int = 0
         ):
@@ -360,38 +360,21 @@ class MaxPool2D(Layer):
             padding (int, optional): Amount of padding. Defaults to 0.
         """
 
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.padding = padding
-    
-    def forward(self, X):
-        self.prev_input = X
-
-        batch_size, n_channels, input_height, input_width = X.shape
-
-        res_height, res_width = _kernel_op_size(
-            (input_height, input_width),
-            (self.kernel_size, self.kernel_size),
+        super().__init__(
+            in_channels=None,
+            out_channels=None,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding)
+        
+    def _kernel_function(self, X):
+        """Perform the max pooling operation for a single sample."""
+        return _2dmaxpool(
+            self.kernel_size,
+            X,
             self.stride,
             self.padding
         )
-
-        self.activations = np.empty((
-            batch_size,
-            n_channels,
-            res_height,
-            res_width
-        ))
-
-        for sample in range(batch_size):
-            self.activations[sample] = _2dmaxpool(
-                (self.kernel_size, self.kernel_size),
-                X[sample],
-                self.stride,
-                self.padding
-            )
-
-        return self.activations
 
     def backward(self, delta, delta_threshold=1e-6):
         pass

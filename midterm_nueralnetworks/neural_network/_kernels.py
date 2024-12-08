@@ -77,20 +77,31 @@ def _2dconvolve(kernels: np.ndarray, X: np.ndarray, stride: int, padding: int):
     return res
 
 def _2dmaxpool(kernel_size: Tuple[int, int], X: np.ndarray, stride: int, padding: int):
-    """Perform a 2D max pooling operation on a 3D input tensor"""
+    """Perform a 2D max pooling operation on a 3D input tensor based on a kernel size.
+
+    Args:
+        kernel_size (Tuple[int, int]): Pooling kernel size 
+        X (np.ndarray): Input tensor for the pooling operation (in_channels, n, m)
+        stride (int): Stride for the pooling operation
+        padding (int): Padding for the pooling operation
+
+    Returns:
+        np.ndarray: Result of the pooling operation (in_channels, height, width)
+    """
 
     k, n, m = X.shape
     kern_n, kern_m = kernel_size
 
-    if padding > 0:
-        X = np.pad(X, ((0, 0), (padding, padding), (padding, padding)), mode='constant', constant_values=0)
-    
-    height, width = _kernel_op_size((n, m), (kern_n, kern_m), stride, padding)
+    X_padded = pad_input(X, padding)
 
-    res = np.empty((k ,height, width))
+    height, width = _kernel_op_size((n, m), kernel_size, stride, padding)
 
-    for i, j in np.ndindex(height, width):
-        patch = X[:, i * stride:i * stride + kern_n, j * stride:j * stride + kern_m]
-        res[:, i, j] = np.max(patch, axis=(1, 2))
+    s0, s1, s2 = X.strides
+    new_shape = (k, height, width, kern_n, kern_m)
+    new_strides = (s0, s1 * stride, s2 * stride, s1, s2)
+
+    patches = as_strided(X, shape=new_shape, strides=new_strides)
+
+    res = np.max(patches, axis=(3, 4))  # Max over kernel dimensions
 
     return res

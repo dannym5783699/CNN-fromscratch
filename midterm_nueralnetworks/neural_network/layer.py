@@ -324,9 +324,3 @@ class MaxPool2D(Layer):
                         end_i = start_i + self.kernel_size
                         end_j = start_j + self.kernel_size
 
-
-if __name__ == "__main__":
-    layer = MaxPool2D(kernel_size=2)
-    
-                   
-

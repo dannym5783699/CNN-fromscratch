@@ -320,6 +320,38 @@ class Conv2D(KernelLayer):
         return conv_res + self.bias[:, None, None]
 
     def backward(self, delta, delta_threshold=1e-6):
+        """
+        Backward pass for the Conv2D layer
+        """
+        batch_size, _, output_height, output_width = delta.shape
+
+        grad_filters = np.zeros_like(self._filters)
+        grad_bias = np.zeros_like(self.bias)
+        grad_input = np.zeros_like(self.prev_input)
+
+        for sample in range(batch_size):
+            for in_channel in range(self._in_channels):
+                for out_channel in range(self._out_channels):
+
+                    grad_filters[out_channel, in_channel] += _2dconvolve(
+                        delta[sample, out_channel], self.prev_input[sample, in_channel], stride = 1, padding = 0
+                    )
+
+        grad_bias += np.sum(delta, axis= (0, 2, 3))
+
+        for sample in range(batch_size):
+            for in_channel in range(self._in_channels):
+                for out_channel in range(self._out_channels):
+
+                    flipped_filter = np.flip(self._filters[out_channel, in_channel], axis =(0,1))
+                    grad_input[sample, in_channel] += _2dconvolve(
+                        delta[sample, out_channel], flipped_filter, stride = 1, padding = 0
+                    )
+
+
+        grad_filters[np.abs(grad_filters) < delta_threshold] = 0
+        grad_bias[np.abs(grad_bias) < delta_threshold] = 0
+
         pass
 
 class MaxPool2D(KernelLayer):

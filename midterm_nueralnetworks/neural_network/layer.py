@@ -354,30 +354,50 @@ class Conv2D(KernelLayer):
 
         self.grad_bias = np.sum(delta, axis=(0, 2, 3))
 
-        for out_channel in range(self.out_channels):
-            for in_channel in range(self.in_channels):
-                print(f"Prev: {self.prev_input.shape}")
-                print(f"Delta : {delta.shape}")
-                print(f"Grad Filters: {self.grad_filters.shape}")
-                temp_filter = _2dconvolve(
-                    delta,
-                    delta,
-                    stride=self.stride,
-                    padding=self.padding
-                )[out_channel, in_channel]
-                print(f"Convolve: {temp_filter.shape}")
-                self.grad_filters[out_channel, in_channel] += temp_filter
+        # for out_channel in range(self.out_channels):
+        #     for in_channel in range(self.in_channels):
+        #         print(f"Prev: {self.prev_input.shape}")
+        #         print(f"Delta : {delta.shape}")
+        #         print(f"Grad Filters: {self.grad_filters.shape}")
+        #         temp_filter = _2dconvolve(
+        #             delta,
+        #             delta,
+        #             stride=self.stride,
+        #             padding=self.padding
+        #         )[out_channel, in_channel]
+        #         print(f"Convolve: {temp_filter.shape}")
+        #         self.grad_filters[out_channel, in_channel] += temp_filter
 
-        for in_channel in range(self.in_channels):
-            for out_channel in range(self.out_channels):
-                flipped_filter = np.flip(self._filters[out_channel, in_channel], axis=(0, 1))
-                grad_input[:, in_channel, :, :] += _2dconvolve(
-                    delta[:, out_channel, :, :],
-                    flipped_filter,
-                    stride=self.stride,
-                    padding=self.padding
-                )
+        #convolution with input
+        print(delta.shape)
+        print(self.prev_input.shape)
+        print(self._filters.shape)
+        padded_X = self._pad_input(self.prev_input)
 
+        temp_filter = _2dconvolve(
+            kernels=self._filters,
+            X=padded_X,
+            stride=self.stride,
+            padding=10
+        )
+        temp_filter += self.bias[:, None, None]
+
+        #temp_filter = _2dconvolve(self._filters, self._pad_input(self.prev_input), stride=self.stride, padding=self.padding)
+        print(temp_filter.shape)
+        self.grad_filters = np.sum(temp_filter, axis=0)
+
+        flipped_filter = np.flip(self._filters, axis=(2,3))
+        # for in_channel in range(self.in_channels):
+        #     for out_channel in range(self.out_channels):
+        #         flipped_filter = np.flip(self._filters[out_channel, in_channel], axis=(0, 1))
+                # grad_input[:, in_channel, :, :] += _2dconvolve(
+                #     delta[:, out_channel, :, :],
+                #     flipped_filter,
+                #     stride=self.stride,
+                #     padding=self.padding
+                # )
+        print(flipped_filter.shape)        
+        grad_input = _2dconvolve(flipped_filter, self._pad_input(self.prev_input), self.stride, padding=0)        
         self.grad_filters[np.abs(self.grad_filters) < delta_threshold] = 0
         self.grad_bias[np.abs(self.grad_bias) < delta_threshold] = 0
 

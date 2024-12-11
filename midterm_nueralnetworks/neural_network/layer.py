@@ -7,6 +7,7 @@ from functools import cached_property
 
 _2DShape = Union[int, Tuple[int, ...]]
 
+
 class Layer(ABC):
     def __init__(self):
         pass
@@ -18,6 +19,7 @@ class Layer(ABC):
     @abstractmethod
     def backward(self):
         pass
+
 
 class Linear(Layer):
     """
@@ -173,10 +175,10 @@ class Linear(Layer):
         flattened_grad = self.grad_weights.flatten()
 
         # Compute the diagonal approximation of the Hessian matrix instead of the inverse
-        hessian_diag_approx = np.square(flattened_grad) + lambda_reg 
+        hessian_diag_approx = np.square(flattened_grad) + lambda_reg
 
         # Compute the update step using the diagonal approximation
-        update_step_flat = -flattened_grad / hessian_diag_approx 
+        update_step_flat = -flattened_grad / hessian_diag_approx
 
         update_step = update_step_flat.reshape(self.grad_weights.shape) * learning_rate
 
@@ -187,18 +189,20 @@ class Linear(Layer):
         """Concatenates a bias term to the input data."""
         return np.concatenate([X, np.ones((X.shape[0], 1))], axis=1)
 
+
 class KernelLayer(Layer):
     """A abstract class representing a layer that operates on patches of the input data using a kernel.
     Examples include convolutional layers and max pooling layers.
     """
+
     def __init__(
             self,
-            in_channels : int,
-            out_channels : int,
-            kernel_size : _2DShape,
-            stride : int,
-            padding : int,
-        ):
+            in_channels: int,
+            out_channels: int,
+            kernel_size: _2DShape,
+            stride: int,
+            padding: int,
+    ):
 
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
@@ -214,7 +218,7 @@ class KernelLayer(Layer):
         """The kernel function that operates on each patch of the input data."""
         pass
 
-    def _pad_input(self, X : np.ndarray):
+    def _pad_input(self, X: np.ndarray):
         """Pad the input data with zeros to account for the padding.
 
         Args:
@@ -227,17 +231,17 @@ class KernelLayer(Layer):
             return X
         else:
             return np.pad(
-                X, 
+                X,
                 ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)),
                 mode='constant',
                 constant_values=0
-                )
-    
+            )
+
     def _stride_size(self, dim_len, kernel_len):
         """Calculate the output size of a kernel operation for a single dimension."""
         return (dim_len + 2 * self.padding - kernel_len) // self.stride + 1
 
-    def _activation_shape(self, X : np.ndarray):
+    def _activation_shape(self, X: np.ndarray):
         """Calculate the output shape of the layer.
         Should need to be calculated once since the input shape should not change.
         """
@@ -248,7 +252,7 @@ class KernelLayer(Layer):
 
         return batch_size, self.out_channels, height, width
 
-    def forward(self, X : np.ndarray):
+    def forward(self, X: np.ndarray):
         self.prev_input = X
 
         batch_size, X_in_channels, input_height, input_width = X.shape
@@ -269,21 +273,22 @@ class KernelLayer(Layer):
             self.activations[sample] = self._kernel_function(X[sample], sample)
 
         return self.activations
-    
+
     @abstractmethod
     def backward(self, delta, delta_threshold=1e-6):
         pass
+
 
 class Conv2D(KernelLayer):
 
     def __init__(
             self,
-            in_channels : int,
-            out_channels : int,
-            kernel_size : _2DShape,
-            stride : int = 1,
-            padding : int = 0
-        ):
+            in_channels: int,
+            out_channels: int,
+            kernel_size: _2DShape,
+            stride: int = 1,
+            padding: int = 0
+    ):
         """A class representing a 2D convolutional layer in a convolutional neural network.
 
         Args:
@@ -316,7 +321,7 @@ class Conv2D(KernelLayer):
 
     def _kernel_function(self, X, sample):
         """Perform the convolution operation for a single sample."""
-        conv_res =  _2dconvolve(
+        conv_res = _2dconvolve(
             self._filters,
             X,
             self.stride,
@@ -338,36 +343,35 @@ class Conv2D(KernelLayer):
         for sample in range(batch_size):
             for in_channel in range(self._in_channels):
                 for out_channel in range(self._out_channels):
-
                     self.grad_filters[out_channel, in_channel] += _2dconvolve(
-                        delta[sample, out_channel], self.prev_input[sample, in_channel], stride = 1, padding = 0
+                        delta[sample, out_channel], self.prev_input[sample, in_channel], stride=1, padding=0
                     )
 
-        grad_bias += np.sum(delta, axis= (0, 2, 3))
+        self.grad_bias += np.sum(delta, axis=(0, 2, 3))
 
         for sample in range(batch_size):
             for in_channel in range(self._in_channels):
                 for out_channel in range(self._out_channels):
-
-                    flipped_filter = np.flip((self._filters[out_channel, in_channel] + self.momentum[out_channel, in_channel]), axis =(0,1))
+                    flipped_filter = np.flip(
+                        (self._filters[out_channel, in_channel] + self.momentum[out_channel, in_channel]), axis=(0, 1))
                     grad_input[sample, in_channel] += _2dconvolve(
-                        delta[sample, out_channel], flipped_filter, stride = 1, padding = 0
+                        delta[sample, out_channel], flipped_filter, stride=1, padding=0
                     )
 
-
         self.grad_filters[np.abs(self.grad_filters) < delta_threshold] = 0
-        grad_bias[np.abs(grad_bias) < delta_threshold] = 0
+        self.grad_bias[np.abs(self.grad_bias) < delta_threshold] = 0
 
         return grad_input
+
 
 class MaxPool2D(KernelLayer):
 
     def __init__(
             self,
-            kernel_size : _2DShape,
-            stride : int = 1,
-            padding : int = 0
-        ):
+            kernel_size: _2DShape,
+            stride: int = 1,
+            padding: int = 0
+    ):
         """A class representing a 2D max pooling layer in a convolutional neural network.
 
         Args:
@@ -382,9 +386,9 @@ class MaxPool2D(KernelLayer):
             kernel_size=kernel_size,
             stride=stride,
             padding=padding)
-        
+
         self.max_positions = None
-        
+
     def forward(self, X):
         if self.in_channels is None and self.out_channels is None:
             self.in_channels = X.shape[1]
@@ -394,7 +398,7 @@ class MaxPool2D(KernelLayer):
         self.max_positions = np.empty((*self._activation_shape(X), 2), dtype=int)
 
         return super().forward(X)
-        
+
     def _kernel_function(self, X, sample):
         """Perform the max pooling operation for a single sample."""
 
@@ -425,5 +429,36 @@ class MaxPool2D(KernelLayer):
                         index2 = self.max_positions[sample, channel, i, j, 1]
                         grad_input[sample, channel, index1, index2] = delta[sample, channel, i, j]
 
-        return grad_input                
+        return grad_input
 
+
+class FlattenLayer(Layer):
+    def __init__(self):
+        super().__init__()
+        self.prev_input = None
+
+    def forward(self, X):
+        self.prev_input = X
+        X.reshape(X.shape[0], -1)
+        return X
+
+    def backward(self, delta):
+        return delta.reshape(self.prev_input.shape)
+
+
+class ActivationLayer(Layer):
+    def __init__(self, activation: str):
+        super().__init__()
+        self.prev_input = None
+        try:
+            self.activation_func = activation_funcs[activation]
+            self.activation_derivative = activation_derivatives[activation]
+        except KeyError:
+            raise ValueError(f"Activation function {activation} is not supported")
+
+    def forward(self, X):
+        self.prev_input = X
+        return self.activation_func(X)
+
+    def backward(self, delta):
+        return self.activation_derivative(self.prev_input)

@@ -2,6 +2,7 @@ import numpy as np
 from typing import Tuple
 from numpy.lib.stride_tricks import as_strided
 
+
 def _kernel_op_size(
         input_size: Tuple[int, int],
         kernel_size: Tuple[int, int],
@@ -12,17 +13,28 @@ def _kernel_op_size(
     width = (input_size[1] + 2 * padding - kernel_size[1]) // stride + 1
     return height, width
 
+
 def pad_input(X: np.ndarray, padding: int):
     """Pad the input with zeros on all sides."""
     if padding == 0:
         return X
-    else:
+    if X.ndim == 4:
+        return np.pad(
+            X,
+            ((0,0),(0,0), (padding, padding), (padding, padding)),
+            mode='constant',
+            constant_values=0
+        )
+    elif X.ndim == 3:
         return np.pad(
             X,
             ((0, 0), (padding, padding), (padding, padding)),
             mode='constant',
             constant_values=0
         )
+    else:
+        raise ValueError('Input must be 4 or 3 dimensional.')
+
 
 def extract_patches(X: np.ndarray, kernel_size: Tuple[int, int], stride: int):
     """Extract sliding windows (patches) from the input tensor."""
@@ -40,6 +52,7 @@ def extract_patches(X: np.ndarray, kernel_size: Tuple[int, int], stride: int):
     patches = as_strided(X, shape=new_shape, strides=new_strides)
     return patches
 
+
 def _2dconvolve(kernels: np.ndarray, X: np.ndarray, stride: int, padding: int):
     """Perform a 2D convolution operation on a 3D input tensor with 3D kernels.
     Apply the convolution operation to each channel in the input tensor and sum the results.
@@ -53,28 +66,35 @@ def _2dconvolve(kernels: np.ndarray, X: np.ndarray, stride: int, padding: int):
     Returns:
         np.ndarray: Result of the convolution operation (out_channels, height, width)
     """
+    if X.ndim == 3:
+        X = np.expand_dims(X, axis=0)
+    batch_size, in_channels, height, width = X.shape
+    out_channels, in_channels_k, kern_n, kern_m = kernels.shape
 
-    k, n, m = X.shape
-    out_channels, in_channels, kern_n, kern_m = kernels.shape
-
-    if in_channels != k:
+    if in_channels != in_channels_k:
         raise ValueError("The number of input channels in kernels and X must match.")
 
     X_padded = pad_input(X, padding)
-    height, width = _kernel_op_size((n, m), (kern_n, kern_m), stride, padding)
+    out_height, out_width = _kernel_op_size((height, width), (kern_n, kern_m), stride, padding)
 
-    patches = extract_patches(X_padded, (kern_n, kern_m), stride)
+    patches_list = []
+    for batch in range(batch_size):
+        sample_patches = extract_patches(X_padded[batch], (kern_n, kern_m), stride)
+        patches_list.append(sample_patches)
+
+    patches = np.stack(patches_list, axis=0)
 
     # Perform convolution
     # Reshape patches for batch multiplication
-    patches = patches.transpose(1, 2, 0, 3, 4).reshape(height * width, in_channels, kern_n, kern_m)
-    kernels = kernels.reshape(out_channels, in_channels * kern_n * kern_m)
+    patches = patches.reshape(batch_size, -1, kern_n * kern_m * in_channels)
+    kernels = kernels.reshape(out_channels, -1)
 
     # Compute dot product for convolution
-    res = np.dot(patches.reshape(height * width, -1), kernels.T)
-    res = res.reshape(height, width, out_channels).transpose(2, 0, 1)
+    res = np.matmul(patches, kernels.T)
+    res = res.reshape(batch_size, out_height, out_width, out_channels).transpose(0, 3, 1, 2)
 
     return res
+
 
 def _2dmaxpool(kernel_size: Tuple[int, int], X: np.ndarray, stride: int, padding: int):
     """Perform a 2D max pooling operation on a 3D input tensor based on a kernel size.
@@ -104,7 +124,7 @@ def _2dmaxpool(kernel_size: Tuple[int, int], X: np.ndarray, stride: int, padding
     patches = as_strided(X, shape=new_shape, strides=new_strides)
 
     res = np.max(patches, axis=(3, 4))  # Max over kernel dimensions
-    
+
     # Find the position of the max values
     # Note: Numpy does not have an argmax function that operates on multiple dimensions
     # So we reshape the patches to (k, height, width, kern_n * kern_m) then find the argmax

@@ -19,8 +19,9 @@ class FeedforwardNeuralNetwork:
         """
         activation = X
         for layer in self.layers:
+            print(f"Layer Name: ({layer.__class__.__name__}): Input shape = {activation.shape}")
             activation = layer.forward(activation)
-
+            print(f"Layer Name: ({layer.__class__.__name__}): Output shape = {activation.shape}")
         return activation
 
     def backward(self, output, target, loss_derivative):
@@ -42,7 +43,9 @@ class FeedforwardNeuralNetwork:
         delta = loss_derivative(output, target)
 
         for layer in reversed(self.layers):
+            print(f"Layer Name: ({layer.__class__.__name__}): Input delta shape = {delta.shape}")
             delta = layer.backward(delta)
+            print(f"Layer Name: ({layer.__class__.__name__}): Output delta shape = {delta.shape}")
 
     def gd(self, learning_rate, friction=0, lambda_reg=0):
         """

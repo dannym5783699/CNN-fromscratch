@@ -11,7 +11,7 @@ def get_data_loader(is_train):
     transform = transforms.Compose([
         transforms.Resize((32, 32)),
         transforms.ToTensor(),
-        transforms.Lambda(lambda x: x.numpy().flatten())
+        transforms.Lambda(lambda x: x.numpy())
     ])
     dataset = MNIST(root="", train=is_train, transform=transform, download=True)
     return DataLoader(dataset, batch_size=64, shuffle=is_train)  # batch size tag

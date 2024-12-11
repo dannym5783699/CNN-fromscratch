@@ -352,7 +352,7 @@ class Conv2D(KernelLayer):
         grad_filters[np.abs(grad_filters) < delta_threshold] = 0
         grad_bias[np.abs(grad_bias) < delta_threshold] = 0
 
-        pass
+        return grad_input
 
 class MaxPool2D(KernelLayer):
 

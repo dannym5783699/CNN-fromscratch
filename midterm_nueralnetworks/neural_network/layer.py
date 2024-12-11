@@ -307,6 +307,12 @@ class Conv2D(KernelLayer):
         # TODO: Improve initialization method 
         self._filters = np.zeros((out_channels, in_channels, kernel_size, kernel_size))
         self.bias = np.zeros(out_channels)
+        self.grad_filters = None
+        self.grad_bias = None
+        self.grad_input = None
+        self.momentum = np.zeros((out_channels, in_channels, kernel_size, kernel_size))
+        self.firstm = np.zeros_like(self._filters)
+        self.secondm = np.zeros_like(self._filters)
 
     def _kernel_function(self, X, sample):
         """Perform the convolution operation for a single sample."""
@@ -325,15 +331,15 @@ class Conv2D(KernelLayer):
         """
         batch_size, _, output_height, output_width = delta.shape
 
-        grad_filters = np.zeros_like(self._filters)
-        grad_bias = np.zeros_like(self.bias)
+        self.grad_filters = np.zeros_like(self._filters)
+        self.grad_bias = np.zeros_like(self.bias)
         grad_input = np.zeros_like(self.prev_input)
 
         for sample in range(batch_size):
             for in_channel in range(self._in_channels):
                 for out_channel in range(self._out_channels):
 
-                    grad_filters[out_channel, in_channel] += _2dconvolve(
+                    self.grad_filters[out_channel, in_channel] += _2dconvolve(
                         delta[sample, out_channel], self.prev_input[sample, in_channel], stride = 1, padding = 0
                     )
 
@@ -343,13 +349,13 @@ class Conv2D(KernelLayer):
             for in_channel in range(self._in_channels):
                 for out_channel in range(self._out_channels):
 
-                    flipped_filter = np.flip(self._filters[out_channel, in_channel], axis =(0,1))
+                    flipped_filter = np.flip((self._filters[out_channel, in_channel] + self.momentum[out_channel, in_channel]), axis =(0,1))
                     grad_input[sample, in_channel] += _2dconvolve(
                         delta[sample, out_channel], flipped_filter, stride = 1, padding = 0
                     )
 
 
-        grad_filters[np.abs(grad_filters) < delta_threshold] = 0
+        self.grad_filters[np.abs(self.grad_filters) < delta_threshold] = 0
         grad_bias[np.abs(grad_bias) < delta_threshold] = 0
 
         return grad_input

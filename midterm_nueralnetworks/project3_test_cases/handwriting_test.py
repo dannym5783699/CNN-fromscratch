@@ -15,10 +15,12 @@ from midterm_nueralnetworks.neural_network.sklearn_classifier_wrapper import \
 
 EXPERIMENT_NAME = "handwritten_digits"
 
+
 def clean_params(params):
     updated_params = {key.replace("model__", ""): value for key, value in params.items()}
     updated_params.pop("random_state")
     return updated_params
+
 
 if __name__ == "__main__":
     results_dir = Path("proj3_results").resolve()
@@ -39,7 +41,6 @@ if __name__ == "__main__":
         ("scaler", StandardScaler()),
         ("model", SklearnFFNN(layers=layers))
     ])
-
 
     optimizer_param_grids = [
         {
@@ -62,7 +63,7 @@ if __name__ == "__main__":
         "model__batch_size": [32, 64, 128],
         "model__random_state": [42],
     }
-    
+
     combined_grid = []
 
     for optimizer_params in optimizer_param_grids:

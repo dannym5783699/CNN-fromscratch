@@ -1,6 +1,6 @@
 import numpy as np
 from midterm_nueralnetworks.neural_network.activation import activation_funcs, activation_derivatives
-from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size, _2dmaxpool
+from midterm_nueralnetworks.neural_network._kernels import _2dconvolve, _kernel_op_size, _2dmaxpool, _convolve
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
 from functools import cached_property
@@ -353,24 +353,29 @@ class Conv2D(KernelLayer):
 
         # Partial Derivative of Filter
         # pL/pF = X (*) pL / pY
-        self.grad_filters = _2dconvolve(
-            kernels = delta,
-            X = self.prev_input,
-            stride = 1,
-            padding = 0, # Valid convolution so no padding
-        )
-
+        # self.grad_filters = _2dconvolve(
+        #     kernels = delta,
+        #     X = self.prev_input,
+        #     stride = 1,
+        #     padding = 0, # Valid convolution so no padding
+        # )
+        test = _convolve(delta[0,0], self.prev_input[0,0], 1, 0)
+        print(test.shape)
+        print(self._filters.shape)
         # Partial Derivative of Input
         # pL/pX = F' (*) pL / pY
         flipped_filter = np.flip(self._filters, axis=(2,3)) # Double check that this does the flip correctly
-        self.grad_input = _2dconvolve(
-            kernels = flipped_filter,
-            X = delta,
-            stride = 1,
-            # We need to do full convolution, so we have to add padding
-            # of kernel_size - 1
-            padding= self.kernel_size[1] - 1
-        )
+        # self.grad_input = _2dconvolve(
+        #     kernels = flipped_filter,
+        #     X = delta,
+        #     stride = 1,
+        #     # We need to do full convolution, so we have to add padding
+        #     # of kernel_size - 1
+        #     padding= self.kernel_size[1] - 1
+        # )
+        test2 = _convolve(flipped_filter[0,0], delta[0,0], 1, self.kernel_size[1]-1)
+        print(test2.shape)
+        print(self.prev_input.shape)
         
         # Return the gradient of the input for the previous layer
         return self.grad_input

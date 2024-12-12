@@ -351,46 +351,19 @@ class Conv2D(KernelLayer):
 
         self.grad_bias = np.sum(delta, axis=(0, 2, 3))
 
-        # Partial Derivative of Filter
-        # pL/pF = X (*) pL / pY
-        # self.grad_filters = _2dconvolve(
-        #     kernels = delta,
-        #     X = self.prev_input,
-        #     stride = 1,
-        #     padding = 0, # Valid convolution so no padding
-        # )
-        tempfilters = np.zeros(self.kernel_size)
-        for outchannel in range(self.out_channels):
-            for inchannel in range(self.in_channels):
-                    for sample in range(delta.shape[0]):
-                        tempfilters += _convolve(delta[sample, outchannel], self.prev_input[sample, inchannel], 1, 0)
-
-                    self.grad_filters[outchannel, inchannel] = tempfilters    
-
-        
-        # Partial Derivative of Input
-        # pL/pX = F' (*) pL / pY
         self.grad_input = np.zeros_like(self.prev_input)
         flipped_filter = np.flip(np.flip(self._filters, axis=2), axis = 3) # Double check that this does the flip correctly
-        # self.grad_input = _2dconvolve(
-        #     kernels = flipped_filter,
-        #     X = delta,
-        #     stride = 1,
-        #     # We need to do full convolution, so we have to add padding
-        #     # of kernel_size - 1
-        #     padding= self.kernel_size[1] - 1
-        # )
-        tempin = np.zeros((self.prev_input.shape[2], self.prev_input.shape[3]))
-        for sample in range(delta.shape[0]):
-          for inchannel in range(self.in_channels):
-            for outchannel in range(self.out_channels):
-                tempin += _convolve(delta[sample, outchannel], flipped_filter[outchannel, inchannel], 1, delta[outchannel,inchannel].shape[0]-1)
 
-            self.grad_input[sample, inchannel] = tempin 
-        #print(test2.shape)
-        #print(self.prev_input.shape)
+        tempfilters = np.zeros(self.kernel_size)
+        tempin = np.zeros((self.prev_input.shape[2], self.prev_input.shape[3]))
+        for outchannel in range(self.out_channels):
+            for inchannel in range(self.in_channels):
+                for sample in range(delta.shape[0]):
+                    tempfilters += _convolve(delta[sample, outchannel], self.prev_input[sample, inchannel], 1, 0)
+                    tempin += _convolve(delta[sample, outchannel], flipped_filter[outchannel, inchannel], 1, delta[outchannel,inchannel].shape[0]-1)
+                self.grad_filters[outchannel, inchannel] = tempfilters    
+                self.grad_input[sample, inchannel] = tempin 
         
-        # Return the gradient of the input for the previous layer
         return self.grad_input
 
 

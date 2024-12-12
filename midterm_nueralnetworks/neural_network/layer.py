@@ -324,9 +324,9 @@ class Conv2D(KernelLayer):
         scale = np.sqrt(2 / np.prod(self.kernel_size))
         self._filters = np.random.randn(out_channels, in_channels, *self.kernel_size) * scale
         self.bias = np.zeros(out_channels)
-        self.grad_filters = None
+        self.grad_filters = np.zeros_like(self._filters)
         self.grad_bias = None
-        self.grad_input = None
+        self.grad_input = np.zeros_like(self.prev_input)
         self.momentum = np.zeros((out_channels, in_channels, kernel_size, kernel_size))
         self.firstm = np.zeros_like(self._filters)
         self.secondm = np.zeros_like(self._filters)
@@ -359,12 +359,19 @@ class Conv2D(KernelLayer):
         #     stride = 1,
         #     padding = 0, # Valid convolution so no padding
         # )
-        test = _convolve(delta[0,0], self.prev_input[0,0], 1, 0)
-        print(test.shape)
-        print(self._filters.shape)
+        tempfilters = np.zeros(self.kernel_size)
+        for outchannel in range(self.out_channels):
+            for inchannel in range(self.in_channels):
+                    for sample in range(delta.shape[0]):
+                        tempfilters += _convolve(delta[sample, outchannel], self.prev_input[sample, inchannel], 1, 0)
+
+                    self.grad_filters[outchannel, inchannel] = tempfilters    
+
+        
         # Partial Derivative of Input
         # pL/pX = F' (*) pL / pY
-        flipped_filter = np.flip(self._filters, axis=(2,3)) # Double check that this does the flip correctly
+        self.grad_input = np.zeros_like(self.prev_input)
+        flipped_filter = np.flip(np.flip(self._filters, axis=2), axis = 3) # Double check that this does the flip correctly
         # self.grad_input = _2dconvolve(
         #     kernels = flipped_filter,
         #     X = delta,
@@ -373,6 +380,13 @@ class Conv2D(KernelLayer):
         #     # of kernel_size - 1
         #     padding= self.kernel_size[1] - 1
         # )
+        tempin = np.zeros((self.prev_input.shape[2], self.prev_input.shape[3]))
+        for sample in range(delta.shape[0]):
+          for inchannel in range(self.in_channels):
+            for outchannel in range(self.out_channels):
+                tempin += _convolve(flipped_filter[outchannel, inchannel], delta[sample, outchannel], 1, self.kernel_size[1]-1)
+
+            self.grad_input[sample, inchannel] = tempin 
         test2 = _convolve(flipped_filter[0,0], delta[0,0], 1, self.kernel_size[1]-1)
         print(test2.shape)
         print(self.prev_input.shape)

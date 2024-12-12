@@ -132,7 +132,8 @@ class FeedforwardNeuralNetwork:
         Zero out the gradients for all layers.
         """
         for layer in self.layers:
-            layer.grad_weights = np.zeros_like(layer.weights)
+            if(isinstance(layer, Linear)):
+              layer.grad_weights = np.zeros_like(layer.weights)
 
     def train(self, x, y, epochs, learning_rate, loss_derivative, friction, method="gd"):
         """

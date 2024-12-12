@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Tuple
-from numpy.lib.stride_tricks import as_strided
+from numpy.lib.stride_tricks import as_strided, sliding_window_view
 
 
 def _kernel_op_size(
@@ -15,25 +15,17 @@ def _kernel_op_size(
 
 
 def pad_input(X: np.ndarray, padding: int):
-    """Pad the input with zeros on all sides."""
-    if padding == 0:
-        return X
-    if X.ndim == 4:
-        return np.pad(
-            X,
-            ((0,0),(0,0), (padding, padding), (padding, padding)),
-            mode='constant',
-            constant_values=0
-        )
-    elif X.ndim == 3:
-        return np.pad(
-            X,
-            ((0, 0), (padding, padding), (padding, padding)),
-            mode='constant',
-            constant_values=0
-        )
-    else:
-        raise ValueError('Input must be 4 or 3 dimensional.')
+    """Pad the input with zeros on all sides of the last two dimensions."""
+    # Get the number of dimensions in the input
+    num_dims = X.ndim
+
+    # Create a padding specification for all dimensions
+    pad_widths = [(0, 0)] * (num_dims - 2) + [padding, padding]
+
+    # Apply padding
+    padded_X = np.pad(X, pad_width=pad_widths, mode='constant', constant_values=0)
+
+    return padded_X
 
 
 def extract_patches(X: np.ndarray, kernel_size: Tuple[int, int], stride: int):
@@ -52,6 +44,18 @@ def extract_patches(X: np.ndarray, kernel_size: Tuple[int, int], stride: int):
     patches = as_strided(X, shape=new_shape, strides=new_strides)
     return patches
 
+def _convolve(kernel: np.ndarray, X: np.ndarray, stride: int, padding: int):
+    """Perform a convolution given a kernel and an input"""
+    X_padded = pad_input(X, padding)
+    out_height, out_width = _kernel_op_size(X.shape, kernel.shape, stride, padding)
+
+    patches = sliding_window_view(X_padded, kernel.shape) [::stride, ::stride]
+    
+    res = np.zeros((out_height, out_width))
+    for i, j in np.ndindex(out_height, out_width):
+        res[i, j] = np.sum(patches[i, j] * kernel)
+    
+    return res
 
 def _2dconvolve(kernels: np.ndarray, X: np.ndarray, stride: int, padding: int):
     """Perform a 2D convolution operation on a 3D input tensor with 3D kernels.

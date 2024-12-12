@@ -44,7 +44,7 @@ test_data = get_data_loader(is_train=False)
 
 print("initial accuracy:", evaluate(test_data, lenet))
 
-optimizer = torch.optim.Adam(lenet.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(lenet.parameters(), lr=0.001)
 L = nn.CrossEntropyLoss()
 
 for epoch in range(5):

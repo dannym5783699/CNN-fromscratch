@@ -5,6 +5,7 @@ from torchvision.datasets import MNIST
 from midterm_nueralnetworks.neural_network.layer import Layer, Conv2D, MaxPool2D, FlattenLayer, Linear, ActivationLayer
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import FeedforwardNeuralNetwork as FNN
 from midterm_nueralnetworks.neural_network.loss import get_loss_derivative, get_loss
+import matplotlib.pyplot as plt
 
 
 def get_data_loader(is_train):
@@ -14,10 +15,13 @@ def get_data_loader(is_train):
         transforms.Lambda(lambda x: x.numpy())
     ])
     dataset = MNIST(root="", train=is_train, transform=transform, download=True)
-    return DataLoader(dataset, batch_size=64, shuffle=is_train)  # batch size tag
+    return DataLoader(dataset, batch_size=32, shuffle=is_train)  # batch size tag
 
 
 def train(network, train_loader, test_loader, epochs, learning_rate):
+    train_accuracies = []
+    test_accuracies = []
+
     for epoch in range(epochs):
         i = 0
         for batch in train_loader:
@@ -35,7 +39,12 @@ def train(network, train_loader, test_loader, epochs, learning_rate):
 
         train_acc = evaluate(network, train_loader)
         test_acc = evaluate(network, test_loader)
+        train_accuracies.append(train_acc)
+        test_accuracies.append(test_acc)
+
         print(f"Epoch {epoch + 1}, Train Accuracy: {train_acc:.6f}, Test Accuracy {test_acc:.6f}")
+
+    return train_accuracies, test_accuracies
 
 
 def evaluate(network, data_loader):
@@ -71,10 +80,19 @@ lenet = FNN(layers)
 loss_func = "nll_softmax"
 loss_derivative = get_loss_derivative[loss_func]
 learning_rate = 0.001
-epochs = 10
+epochs = 20
 
 train_loader = get_data_loader(True)
 test_loader = get_data_loader(False)
 
-train(lenet, train_loader, test_loader, epochs, learning_rate)
+train_accuracies, test_accuracies = train(lenet, train_loader, test_loader, epochs, learning_rate)
 
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, epochs + 1), train_accuracies, label="Train Accuracy")
+plt.plot(range(1, epochs + 1), test_accuracies, label='Test Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Train vs Test Accuracy Over Epochs')
+plt.legend()
+plt.grid(True)
+plt.show()

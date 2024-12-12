@@ -384,7 +384,7 @@ class Conv2D(KernelLayer):
         for sample in range(delta.shape[0]):
           for inchannel in range(self.in_channels):
             for outchannel in range(self.out_channels):
-                tempin += _convolve(flipped_filter[outchannel, inchannel], delta[sample, outchannel], 1, self.kernel_size[1]-1)
+                tempin += _convolve(delta[sample, outchannel], flipped_filter[outchannel, inchannel], 1, delta[outchannel,inchannel].shape[0]-1)
 
             self.grad_input[sample, inchannel] = tempin 
         #print(test2.shape)

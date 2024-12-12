@@ -21,7 +21,7 @@ def train(network, train_loader, test_loader, epochs, learning_rate):
     for epoch in range(epochs):
         i = 0
         for batch in train_loader:
-            if i > 100:
+            if i > 1:
                 break;
             X_batch, y_batch = batch
             y_one_hot = np.zeros((y_batch.size(0), 10))

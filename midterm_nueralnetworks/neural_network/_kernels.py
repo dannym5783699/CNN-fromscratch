@@ -72,6 +72,8 @@ def _2dconvolve(kernels: np.ndarray, X: np.ndarray, stride: int, padding: int):
     out_channels, in_channels_k, kern_n, kern_m = kernels.shape
 
     if in_channels != in_channels_k:
+        print(X.shape)
+        print(kernels.shape)
         raise ValueError("The number of input channels in kernels and X must match.")
 
     X_padded = pad_input(X, padding)

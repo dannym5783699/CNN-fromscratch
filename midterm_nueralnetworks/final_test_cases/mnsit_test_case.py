@@ -19,7 +19,10 @@ def get_data_loader(is_train):
 
 def train(network, train_loader, test_loader, epochs, learning_rate):
     for epoch in range(epochs):
+        i = 0
         for batch in train_loader:
+            if i > 100:
+                break;
             X_batch, y_batch = batch
             y_one_hot = np.zeros((y_batch.size(0), 10))
             y_one_hot[np.arange(y_batch.size(0)), y_batch.numpy()] = 1
@@ -28,6 +31,7 @@ def train(network, train_loader, test_loader, epochs, learning_rate):
             network.backward(y_pred, y_one_hot, loss_derivative)
             network.adam(learning_rate)
             network.zero_grad()
+            i += 1
 
         train_acc = evaluate(network, train_loader)
         test_acc = evaluate(network, test_loader)
@@ -37,12 +41,16 @@ def train(network, train_loader, test_loader, epochs, learning_rate):
 def evaluate(network, data_loader):
     correct = 0
     total = 0
+    i = 0
     for batch in data_loader:
+        if i > 100:
+            break
         X_batch, y_batch = batch
         y_pred = network.forward(X_batch.numpy())
         predictions = np.argmax(y_pred, axis=1)
         correct += np.sum(predictions == y_batch.numpy())
         total += y_batch.size(0)
+        i += 1
     return correct / total
 
 
@@ -63,9 +71,10 @@ lenet = FNN(layers)
 loss_func = "nll_softmax"
 loss_derivative = get_loss_derivative[loss_func]
 learning_rate = 0.001
-epochs = 5
+epochs = 10
 
 train_loader = get_data_loader(True)
 test_loader = get_data_loader(False)
 
 train(lenet, train_loader, test_loader, epochs, learning_rate)
+

@@ -19,9 +19,9 @@ class FeedforwardNeuralNetwork:
         """
         activation = X
         for layer in self.layers:
-            print(f"Layer Name: ({layer.__class__.__name__}): Input shape = {activation.shape}")
+            #print(f"Layer Name: ({layer.__class__.__name__}): Input shape = {activation.shape}")
             activation = layer.forward(activation)
-            print(f"Layer Name: ({layer.__class__.__name__}): Output shape = {activation.shape}")
+            #print(f"Layer Name: ({layer.__class__.__name__}): Output shape = {activation.shape}")
         return activation
 
     def backward(self, output, target, loss_derivative):
@@ -43,9 +43,9 @@ class FeedforwardNeuralNetwork:
         delta = loss_derivative(output, target)
 
         for layer in reversed(self.layers):
-            print(f"Layer Name: ({layer.__class__.__name__}): Input delta shape = {delta.shape}")
+            #print(f"Layer Name: ({layer.__class__.__name__}): Input delta shape = {delta.shape}")
             delta = layer.backward(delta)
-            print(f"Layer Name: ({layer.__class__.__name__}): Output delta shape = {delta.shape}")
+            #print(f"Layer Name: ({layer.__class__.__name__}): Output delta shape = {delta.shape}")
 
     def gd(self, learning_rate, friction=0, lambda_reg=0):
         """
@@ -117,6 +117,7 @@ class FeedforwardNeuralNetwork:
                 # update weights
                 layer.weights -= (learning_rate / (np.sqrt(second) + 1e-8)) * (first)
             elif (isinstance(layer, Conv2D)):
+                np.clip(layer.grad_filters, -1, 1, out=layer.grad_filters)
                 # update moments
                 layer.secondm = (self.p2 * layer.secondm) + ((1 - self.p2) * (layer.grad_filters ** 2))
                 layer.firstm = (self.p1 * layer.firstm) + ((1 - self.p1) * (layer.grad_filters))
@@ -134,6 +135,8 @@ class FeedforwardNeuralNetwork:
         for layer in self.layers:
             if(isinstance(layer, Linear)):
               layer.grad_weights = np.zeros_like(layer.weights)
+            if(isinstance(layer, Conv2D)):
+                layer.grad_filters = np.zeros_like(layer._filters) 
 
     def train(self, x, y, epochs, learning_rate, loss_derivative, friction, method="gd"):
         """

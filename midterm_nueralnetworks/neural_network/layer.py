@@ -119,7 +119,7 @@ class Linear(Layer):
         """
 
         self.prev_input = X
-        print(f"prev input Linear: {self.prev_input.shape}")
+        #print(f"prev input Linear: {self.prev_input.shape}")
         self.preactivations = np.dot(self.concat_bias(X), self.weights.T)
         self.activations = self._activation_func(self.preactivations)
 
@@ -264,7 +264,7 @@ class KernelLayer(Layer):
 
     def forward(self, X: np.ndarray):
         self.prev_input = X
-        print(f"prev input Kernel Layer: {self.prev_input.shape}")
+        #print(f"prev input Kernel Layer: {self.prev_input.shape}")
 
         batch_size, X_in_channels, input_height, input_width = X.shape
 
@@ -387,9 +387,8 @@ class Conv2D(KernelLayer):
                 tempin += _convolve(flipped_filter[outchannel, inchannel], delta[sample, outchannel], 1, self.kernel_size[1]-1)
 
             self.grad_input[sample, inchannel] = tempin 
-        test2 = _convolve(flipped_filter[0,0], delta[0,0], 1, self.kernel_size[1]-1)
-        print(test2.shape)
-        print(self.prev_input.shape)
+        #print(test2.shape)
+        #print(self.prev_input.shape)
         
         # Return the gradient of the input for the previous layer
         return self.grad_input
@@ -469,7 +468,7 @@ class FlattenLayer(Layer):
 
     def forward(self, X):
         self.prev_input = X
-        print(f"prev input Flatten: {self.prev_input.shape}")
+        #print(f"prev input Flatten: {self.prev_input.shape}")
         X.reshape(X.shape[0], -1)
         return X
 
@@ -488,7 +487,7 @@ class ActivationLayer(Layer):
 
     def forward(self, X):
         self.prev_input = X
-        print(f"prev input Activation: {self.prev_input.shape}")
+        #print(f"prev input Activation: {self.prev_input.shape}")
         return self.activation_func(X)
 
     def backward(self, delta):

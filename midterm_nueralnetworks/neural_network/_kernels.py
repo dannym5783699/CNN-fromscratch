@@ -17,10 +17,13 @@ def _kernel_op_size(
 def pad_input(X: np.ndarray, padding: int):
     """Pad the input with zeros on all sides of the last two dimensions."""
     # Get the number of dimensions in the input
+    if X.ndim < 2:
+        raise ValueError("Input tensor must have at least 2 dimensions.")
+    
     num_dims = X.ndim
 
     # Create a padding specification for all dimensions
-    pad_widths = [(0, 0)] * (num_dims - 2) + [padding, padding]
+    pad_widths = [(0, 0)] * (num_dims - 2) + [(padding, padding), (padding, padding)]
 
     # Apply padding
     padded_X = np.pad(X, pad_width=pad_widths, mode='constant', constant_values=0)

@@ -1,98 +1,102 @@
-import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
 from midterm_nueralnetworks.neural_network.layer import Layer, Conv2D, MaxPool2D, FlattenLayer, Linear, ActivationLayer
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import FeedforwardNeuralNetwork as FNN
 from midterm_nueralnetworks.neural_network.loss import get_loss_derivative, get_loss
+from midterm_nueralnetworks.final_test_cases.test_utils import train
 import matplotlib.pyplot as plt
+from torch.utils.data import Subset
+import random
 
 
-def get_data_loader(is_train):
+def get_data_loader(is_train, subset_size=None):
     transform = transforms.Compose([
         transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.numpy())
     ])
     dataset = MNIST(root="", train=is_train, transform=transform, download=True)
-    return DataLoader(dataset, batch_size=32, shuffle=is_train)  # batch size tag
 
+    if subset_size:
+        indices = random.sample(range(len(dataset)), subset_size)
+        dataset = Subset(dataset, indices)
+    return dataset
 
-def train(network, train_loader, test_loader, epochs, learning_rate):
-    train_accuracies = []
-    test_accuracies = []
+train_loader = get_data_loader(True, 256)
+test_loader = get_data_loader(False, 256)
 
-    for epoch in range(epochs):
-        i = 0
-        for batch in train_loader:
-            if i > 1:
-                break;
-            X_batch, y_batch = batch
-            y_one_hot = np.zeros((y_batch.size(0), 10))
-            y_one_hot[np.arange(y_batch.size(0)), y_batch.numpy()] = 1
+results = {
+    "train": {},
+    "test": {}
+}
 
-            y_pred = network.forward(X_batch.numpy())
-            network.backward(y_pred, y_one_hot, loss_derivative)
-            network.adam(learning_rate)
-            network.zero_grad()
-            i += 1
+for i in range(6):
+    layers = [
+        Conv2D(in_channels=1, out_channels=6, kernel_size=5),
+        ActivationLayer(activation="relu"),
+        MaxPool2D(kernel_size=2, stride=2),
+        Conv2D(in_channels=6, out_channels=16, kernel_size=5),
+        ActivationLayer(activation="relu"),
+        MaxPool2D(kernel_size=2, stride=2),
+        FlattenLayer(),
+        Linear(input_size=400, output_size=120, activation="relu"),
+        Linear(input_size=120, output_size=84, activation="relu"),
+        Linear(input_size=84, output_size=10, activation="softmax", final_layer=True)]
 
-        train_acc = evaluate(network, train_loader)
-        test_acc = evaluate(network, test_loader)
-        train_accuracies.append(train_acc)
-        test_accuracies.append(test_acc)
+    lenet = FNN(layers)
+    loss_func = "nll_softmax"
+    loss_derivative = get_loss_derivative[loss_func]
+    learning_rate: float
+    epochs = 5
+    batch_size: int
+    if i == 0:
+        learning_rate = 0.01
+        batch_size = 64
+    elif i == 1:
+        learning_rate = 0.01
+        batch_size = 100
+    elif i == 2:
+        learning_rate = 0.01
+        batch_size = 128
+    elif i == 3:
+        learning_rate = 0.001
+        batch_size = 64
+    elif i == 4:
+        learning_rate = 0.001
+        batch_size = 100
+    else:
+        learning_rate = 0.001
+        batch_size = 128
 
-        print(f"Epoch {epoch + 1}, Train Accuracy: {train_acc:.6f}, Test Accuracy {test_acc:.6f}")
+    train_data = DataLoader(train_loader, batch_size=batch_size, shuffle=True)
+    test_data = DataLoader(test_loader, batch_size=batch_size, shuffle=False)
 
-    return train_accuracies, test_accuracies
+    train_accuracies, test_accuracies = train(lenet, train_data, test_data, epochs, learning_rate, loss_derivative)
 
+    key = f"LR={learning_rate}, Batch={batch_size}"
+    results["train"][key] = train_accuracies
+    results["test"][key] = test_accuracies
 
-def evaluate(network, data_loader):
-    correct = 0
-    total = 0
-    i = 0
-    for batch in data_loader:
-        if i > 100:
-            break
-        X_batch, y_batch = batch
-        y_pred = network.forward(X_batch.numpy())
-        predictions = np.argmax(y_pred, axis=1)
-        correct += np.sum(predictions == y_batch.numpy())
-        total += y_batch.size(0)
-        i += 1
-    return correct / total
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, epochs + 1), train_accuracies, label="Train Accuracy")
+    plt.plot(range(1, epochs + 1), test_accuracies, label='Test Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.title(f'Train vs Test Accuracy Over Epochs Batch Size={batch_size} MNSIT')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
+plt.figure(figsize=(12, 8))
+for key, acc in results["train"].items():
+    plt.plot(range(1, len(acc) + 1), acc, label=f"Train {key}")
+for key, acc in results["test"].items():
+    plt.plot(range(1, len(acc) + 1), acc, linestyle='--', label=f"Test {key}")
 
-layers = [
-    Conv2D(in_channels=1, out_channels=6, kernel_size=5),
-    ActivationLayer(activation="relu"),
-    MaxPool2D(kernel_size=2, stride=2),
-    Conv2D(in_channels=6, out_channels=16, kernel_size=5),
-    ActivationLayer(activation="relu"),
-    MaxPool2D(kernel_size=2, stride=2),
-    FlattenLayer(),
-    Linear(input_size=400, output_size=120, activation="relu"),
-    Linear(input_size=120, output_size=84, activation="relu"),
-    Linear(input_size=84, output_size=10, activation="softmax", final_layer=True)]
-
-lenet = FNN(layers)
-
-loss_func = "nll_softmax"
-loss_derivative = get_loss_derivative[loss_func]
-learning_rate = 0.001
-epochs = 20
-
-train_loader = get_data_loader(True)
-test_loader = get_data_loader(False)
-
-train_accuracies, test_accuracies = train(lenet, train_loader, test_loader, epochs, learning_rate)
-
-plt.figure(figsize=(10, 6))
-plt.plot(range(1, epochs + 1), train_accuracies, label="Train Accuracy")
-plt.plot(range(1, epochs + 1), test_accuracies, label='Test Accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
-plt.title('Train vs Test Accuracy Over Epochs')
+plt.title('Combined Accuracy Over Epochs MNSIT')
 plt.legend()
 plt.grid(True)
 plt.show()

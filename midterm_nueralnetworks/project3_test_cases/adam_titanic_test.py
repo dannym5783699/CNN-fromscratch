@@ -5,7 +5,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import FeedforwardNeuralNetwork
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
 
 
@@ -76,9 +76,9 @@ def batch_size_test_xavier_uniform():
     for batch_size, ax in zip(batch_sizes, axs.flatten()):
         # Initialize the network
         net = FeedforwardNeuralNetwork([
-            Layer(2, 10, "tanh", weight_init="xavier_uniform"),  # Input layer: 2 features, 10 neurons
-            Layer(10, 10, "tanh", weight_init="xavier_uniform"),  # Hidden layer: 10 neurons
-            Layer(10, 2, "softmax", final_layer=True, weight_init="xavier_uniform")  # Output layer: 2 classes, softmax
+            Linear(2, 10, "tanh", weight_init="xavier_uniform"),  # Input layer: 2 features, 10 neurons
+            Linear(10, 10, "tanh", weight_init="xavier_uniform"),  # Hidden layer: 10 neurons
+            Linear(10, 2, "softmax", final_layer=True, weight_init="xavier_uniform")  # Output layer: 2 classes, softmax
         ])
 
         train_losses = np.zeros(MAX_EPOCHS)

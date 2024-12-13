@@ -1,10 +1,10 @@
 import numpy as np
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear, Conv2D, MaxPool2D
 from typing import List
 
 
 class FeedforwardNeuralNetwork:
-    def __init__(self, layers: List[Layer]):
+    def __init__(self, layers: List[Linear]):
         """
         Initializes the Feedforward Neural Network with the given layer sizes.
         """
@@ -19,8 +19,9 @@ class FeedforwardNeuralNetwork:
         """
         activation = X
         for layer in self.layers:
+            #print(f"Layer Name: ({layer.__class__.__name__}): Input shape = {activation.shape}")
             activation = layer.forward(activation)
-
+            #print(f"Layer Name: ({layer.__class__.__name__}): Output shape = {activation.shape}")
         return activation
 
     def backward(self, output, target, loss_derivative):
@@ -42,7 +43,9 @@ class FeedforwardNeuralNetwork:
         delta = loss_derivative(output, target)
 
         for layer in reversed(self.layers):
+            #print(f"Layer Name: ({layer.__class__.__name__}): Input delta shape = {delta.shape}")
             delta = layer.backward(delta)
+            #print(f"Layer Name: ({layer.__class__.__name__}): Output delta shape = {delta.shape}")
 
     def gd(self, learning_rate, friction=0, lambda_reg=0):
         """
@@ -56,13 +59,23 @@ class FeedforwardNeuralNetwork:
             The learning rate to control the size of the weight updates.
         """
         for layer in self.layers:
-            np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
-            gradientcalc = (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
-            if friction != 0:
-                layer.momentum = (layer.momentum * friction) - gradientcalc
-                layer.weights += layer.momentum
-            else:
-                layer.weights -= gradientcalc
+            # If layer is max pooling we do not need to update since it just computes max.
+            if (isinstance(layer, Linear)):
+                np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
+                gradientcalc = (learning_rate * (layer.grad_weights + lambda_reg * layer.weights))
+                if friction != 0:
+                    layer.momentum = (layer.momentum * friction) - gradientcalc
+                    layer.weights += layer.momentum
+                else:
+                    layer.weights -= gradientcalc
+            # Convolution is similar but update the filters instead of weights.
+            elif (isinstance(layer, Conv2D)):
+                gradientcalc = (learning_rate * (layer.grad_filters + lambda_reg * layer._filters))
+                if friction != 0:
+                    layer.momentum = (layer.momentum * friction) - gradientcalc
+                    layer._filters += layer.momentum
+                else:
+                    layer._filters -= gradientcalc
 
     def newtons_method(self, learning_rate, lambda_reg=0):
         """
@@ -92,23 +105,38 @@ class FeedforwardNeuralNetwork:
         self.p1 = p1
         self.p2 = p2
         for layer in self.layers:
-            np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
-            #update moments
-            layer.secondm = (self.p2 * layer.secondm) + ((1 - self.p2) * (layer.grad_weights ** 2))
-            layer.firstm = (self.p1 * layer.firstm) + ((1 - self.p1) * (layer.grad_weights))
-            #bias correction before weight update
-            second = layer.secondm / (1 - (self.p2 ** self.t))
-            first = layer.firstm / (1 - (self.p1 ** self.t))
-            self.t += 1
-            #update weights
-            layer.weights -= (learning_rate / (np.sqrt(second) + 1e-8)) * (first)
+            if (isinstance(layer, Linear)):
+                np.clip(layer.grad_weights, -1, 1, out=layer.grad_weights)
+                # update moments
+                layer.secondm = (self.p2 * layer.secondm) + ((1 - self.p2) * (layer.grad_weights ** 2))
+                layer.firstm = (self.p1 * layer.firstm) + ((1 - self.p1) * (layer.grad_weights))
+                # bias correction before weight update
+                second = layer.secondm / (1 - (self.p2 ** self.t))
+                first = layer.firstm / (1 - (self.p1 ** self.t))
+                self.t += 1
+                # update weights
+                layer.weights -= (learning_rate / (np.sqrt(second) + 1e-8)) * (first)
+            elif (isinstance(layer, Conv2D)):
+                np.clip(layer.grad_filters, -1, 1, out=layer.grad_filters)
+                # update moments
+                layer.secondm = (self.p2 * layer.secondm) + ((1 - self.p2) * (layer.grad_filters ** 2))
+                layer.firstm = (self.p1 * layer.firstm) + ((1 - self.p1) * (layer.grad_filters))
+                # bias correction before weight update
+                second = layer.secondm / (1 - (self.p2 ** self.t))
+                first = layer.firstm / (1 - (self.p1 ** self.t))
+                self.t += 1
+                # update weights
+                layer._filters -= (learning_rate / (np.sqrt(second) + 1e-8)) * (first)
 
     def zero_grad(self):
         """
         Zero out the gradients for all layers.
         """
         for layer in self.layers:
-            layer.grad_weights = np.zeros_like(layer.weights)
+            if(isinstance(layer, Linear)):
+              layer.grad_weights = np.zeros_like(layer.weights)
+            if(isinstance(layer, Conv2D)):
+                layer.grad_filters = np.zeros_like(layer._filters) 
 
     def train(self, x, y, epochs, learning_rate, loss_derivative, friction, method="gd"):
         """

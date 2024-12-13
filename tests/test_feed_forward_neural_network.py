@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import midterm_nueralnetworks.neural_network.activation as act
 import midterm_nueralnetworks.neural_network.loss as loss
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import (
     FeedforwardNeuralNetwork
 )
@@ -36,8 +36,8 @@ class TestFeedforwardNeuralNetwork(unittest.TestCase):
         self.y_train = y_train
         self.y_test = y_test
         # Initialize the neural network
-        self.nn = FeedforwardNeuralNetwork(Layer(4,5).setActivation(act.relu, act.relu_derivative),
-                                           Layer(5,3).setActivation(act.sigmoid, act.sigmoid_derivative))  # 4 input, 5 hidden, 3 output nodes
+        self.nn = FeedforwardNeuralNetwork(Linear(4,5).setActivation(act.relu, act.relu_derivative),
+                                           Linear(5,3).setActivation(act.sigmoid, act.sigmoid_derivative))  # 4 input, 5 hidden, 3 output nodes
 
     def test_forward_pass(self):
         """

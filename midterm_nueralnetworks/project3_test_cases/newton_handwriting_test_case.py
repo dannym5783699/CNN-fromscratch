@@ -6,7 +6,7 @@ from sklearn.datasets import load_digits
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm  # Import the tqdm library for the progress bar
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import FeedforwardNeuralNetwork
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
 
 
@@ -33,9 +33,9 @@ def batch_size_test_with_newtons():
     for batch_size, ax in zip(batch_sizes, axs.flatten()):
         # Initialize the network
         net = FeedforwardNeuralNetwork([
-            Layer(64, 64, "relu"),
-            Layer(64, 32, "relu"),
-            Layer(32, 10, "softmax", final_layer=True)
+            Linear(64, 64, "relu"),
+            Linear(64, 32, "relu"),
+            Linear(32, 10, "softmax", final_layer=True)
         ])
 
         train_losses = np.zeros(MAX_EPOCHS)

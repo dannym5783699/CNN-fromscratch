@@ -6,13 +6,13 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import \
     FeedforwardNeuralNetwork
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.loss import get_loss_derivative, get_loss
 
 class SklearnFFNN(BaseEstimator, ClassifierMixin):
     def __init__(
             self,
-            layers : List[Layer],
+            layers : List[Linear],
             max_epochs : int = 100,
             learning_rate : float=1e-2,
             lambda_reg : float =1e-5,

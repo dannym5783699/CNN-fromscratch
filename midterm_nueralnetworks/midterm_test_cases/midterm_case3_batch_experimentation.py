@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_digits
 from sklearn.preprocessing import OneHotEncoder
 from midterm_nueralnetworks.neural_network.feed_forward_neural_network import FeedforwardNeuralNetwork
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.loss import NLL_derivative_softmax
 
 
@@ -28,9 +28,9 @@ def main():
 
         # Initialize the network
         net = FeedforwardNeuralNetwork([
-            Layer(64, 64, "relu"),
-            Layer(64, 32, "relu"),
-            Layer(32, 10, "softmax", final_layer=True)
+            Linear(64, 64, "relu"),
+            Linear(64, 32, "relu"),
+            Linear(32, 10, "softmax", final_layer=True)
         ])
 
         train_losses = np.zeros(MAX_EPOCHS)

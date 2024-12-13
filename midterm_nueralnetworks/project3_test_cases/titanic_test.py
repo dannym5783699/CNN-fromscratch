@@ -11,7 +11,7 @@ from sklearn.model_selection import (GridSearchCV, ParameterGrid,
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from midterm_nueralnetworks.neural_network.layer import Layer
+from midterm_nueralnetworks.neural_network.layer import Linear
 from midterm_nueralnetworks.neural_network.sklearn_classifier_wrapper import \
     SklearnFFNN
 
@@ -35,10 +35,10 @@ if __name__ == "__main__":
     y = np.array(y).reshape(-1, 1)
 
     layers = [
-        Layer(X.shape[1], 16, "relu"),
-        Layer(16, 16, "relu"),
-        Layer(16, 8, "relu"),
-        Layer(8, 1, "sigmoid", final_layer=True)
+        Linear(X.shape[1], 16, "relu"),
+        Linear(16, 16, "relu"),
+        Linear(16, 8, "relu"),
+        Linear(8, 1, "sigmoid", final_layer=True)
     ]
 
     # Create the pipeline
